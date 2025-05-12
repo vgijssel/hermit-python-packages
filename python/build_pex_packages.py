@@ -130,7 +130,7 @@ class PexBuilder:
             return version_dir
         
         print(f"Creating lock file for {package_name}=={version} with Python {python_version}")
-        
+
         try:
             # Use uv to create a lock file
             cmd = [
@@ -176,29 +176,30 @@ class PexBuilder:
         # First create dependency files
         version_dir = self.create_dependency_files(package_name, version, python_version)
         req_txt_file = version_dir / "requirements.txt"
-        
-        # Create a temporary directory for building
-        with tempfile.TemporaryDirectory(dir=self.tmp_dir) as temp_dir:
-            temp_dir_path = Path(temp_dir)
+
+        # Run uv tool to create PEX file
+        cmd = [
+            "uv",
+            "run",
+            "--python",
+            python_version,
+            "--isolated",
+            "--managed-python",
+            "--from",
+            "pex==2.37.0",
+            "pex",
+            "-r", str(req_txt_file),
+            "-o", str(pex_path),
+        ]
             
-            # Build PEX file using the lock file and the current Python interpreter
-            cmd = [
-                "pex",
-                "-r", str(req_txt_file),
-                "-o", str(pex_path),
-                "--python-shebang", f"/usr/bin/env python",
-                "-c", package_name,  # Use package name as entry point
-                "--disable-cache",
-                "--pip-version", "latest"
-            ]
-            
-            try:
-                subprocess.run(cmd, check=True, capture_output=True)
-                print(f"Successfully built PEX: {pex_path}")
-                return pex_path
-            except subprocess.CalledProcessError as e:
-                print(f"Failed to build PEX: {e.stderr.decode()}")
-                raise
+        try:
+            print(f"Running command: {' '.join(cmd)}")
+            subprocess.run(cmd, check=True, capture_output=True)
+            print(f"Successfully built PEX: {pex_path}")
+            return pex_path
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to build PEX: {e.stderr.decode()}")
+            raise
 
     def upload_to_oci(self, pex_path: Path, package_name: str, version: str, 
                      python_version: str, platform: str = "linux") -> str:

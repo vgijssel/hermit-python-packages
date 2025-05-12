@@ -1,6 +1,6 @@
-versions:
-  - version: 0.80.0
-    python: 3.11
+binaries:
+  - aider
 
-  - version: 0.82.0
+versions:
+  - version: 0.83.1
     python: 3.12
