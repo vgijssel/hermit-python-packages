@@ -1,0 +1,7 @@
+python_sources(
+    name="build_pex_packages",
+    sources=["build_pex_packages.py"],
+    dependencies=[
+        "3rdparty/python:reqs",
+    ],
+)
