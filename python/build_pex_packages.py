@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import sys
+import tarfile
 import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -202,16 +203,20 @@ class PexBuilder:
             print(f"Failed to build PEX: {e.stderr.decode()}")
             raise
 
-    def create_binary_scripts(self, pex_path: Path, package_name: str, binaries: List[str]) -> None:
+    def create_binary_scripts(self, pex_path: Path, package_name: str, binaries: List[str]) -> List[Path]:
         """Create bash scripts for each binary that invoke the PEX file.
         
         Args:
             pex_path: Path to the PEX file
             package_name: Name of the package
             binaries: List of binary names to create scripts for
+            
+        Returns:
+            List of paths to the created binary scripts
         """
         # Get the directory where the PEX file is located
         pex_dir = pex_path.parent
+        script_paths = []
         
         for binary in binaries:
             script_path = pex_dir / binary
@@ -232,6 +237,37 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             # Make the script executable
             os.chmod(script_path, 0o755)
             print(f"Created binary script: {script_path}")
+            script_paths.append(script_path)
+            
+        return script_paths
+
+    def create_archive(self, pex_path: Path, script_paths: List[Path]) -> Path:
+        """Create a tar.gz archive containing the PEX file and binary scripts.
+        
+        Args:
+            pex_path: Path to the PEX file
+            script_paths: List of paths to the binary scripts
+            
+        Returns:
+            Path to the created archive
+        """
+        # Create archive name based on the PEX file name
+        archive_name = pex_path.stem + ".tar.gz"
+        archive_path = pex_path.parent / archive_name
+        
+        print(f"Creating archive: {archive_path}")
+        
+        # Create tar.gz archive
+        with tarfile.open(archive_path, "w:gz") as tar:
+            # Add PEX file to archive
+            tar.add(pex_path, arcname=pex_path.name)
+            
+            # Add binary scripts to archive
+            for script_path in script_paths:
+                tar.add(script_path, arcname=script_path.name)
+        
+        print(f"Successfully created archive: {archive_path}")
+        return archive_path
 
     def upload_to_oci(self, pex_path: Path, package_name: str, version: str, 
                      python_version: str, platform: str = "linux") -> str:
@@ -415,7 +451,10 @@ on "unpack" {{
                 pex_path = self.build_pex(actual_package_name, version, python_version)
                 
                 # Create binary scripts
-                self.create_binary_scripts(pex_path, actual_package_name, binaries)
+                script_paths = self.create_binary_scripts(pex_path, actual_package_name, binaries)
+                
+                # Create archive with PEX file and binary scripts
+                archive_path = self.create_archive(pex_path, script_paths)
 
                 # # Upload to OCI registry
                 # for platform in ["linux", "darwin"]:
