@@ -137,7 +137,7 @@ class PexBuilder:
                 "uv", "pip", "compile", 
                 "--output-file", str(req_txt_file),
                 str(req_in_file),
-                "--python-version", python_version
+                "--python-version", str(python_version)
             ]
 
             print(f"Running command: {' '.join(cmd)}")
