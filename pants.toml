@@ -1,0 +1,28 @@
+[GLOBAL]
+pants_version = "2.25.1"
+
+backend_packages = ["pants.backend.python"]
+pants_ignore = [
+  ".*/",
+  "/dist/",
+  "__pycache__",
+  "!.semgrep/",
+  "!.github/" ,
+  "tmp",
+  ".aider*",
+  ".hermit",
+]
+
+keep_sandboxes = "on_failure"
+
+[python]
+interpreter_constraints = ["CPython==3.13.*"]
+enable_resolves = true
+resolves_generate_lockfiles = true
+
+[python.resolves]
+python-default = "3rdparty/python/python.lock"
+
+[export]
+py_resolve_format = "symlinked_immutable_virtualenv"
+resolve = ["python-default"]
