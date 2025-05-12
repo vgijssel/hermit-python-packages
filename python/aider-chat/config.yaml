@@ -5,4 +5,4 @@ package: aider-chat
 versions:
   # Using Python 3.11, because `google-generativeai` depends on pkg_resources which is removed in Python 3.12
   - version: 0.83.1
-    python: 3.11
+    python: 3.10
