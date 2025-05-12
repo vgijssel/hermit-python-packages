@@ -16,6 +16,7 @@ from typing import Dict, List, Optional, Tuple
 import requests
 import semver
 import yaml
+import venv
 
 
 class PexBuilder:
@@ -129,15 +130,41 @@ class PexBuilder:
         
         print(f"Creating lock file for {package_name}=={version} with Python {python_version}")
         
-        # Use pip-compile to create a lock file
+        # Use a virtual environment to create a lock file
         try:
+            venv_dir = self.tmp_dir / f"venv-{package_name}-{version}-py{python_version}"
+            
+            # Create virtual environment
+            print(f"Creating virtual environment for {package_name}=={version} with Python {python_version}")
+            
+            # Use the current Python to create a venv
             cmd = [
-                f"python{python_version}", "-m", "pip", "install", "pip-tools"
+                sys.executable, "-m", "venv", str(venv_dir)
+            ]
+            subprocess.run(cmd, check=True, capture_output=True)
+            
+            # Determine pip and python paths in the venv
+            if sys.platform == "win32":
+                pip_path = venv_dir / "Scripts" / "pip"
+                python_path = venv_dir / "Scripts" / "python"
+            else:
+                pip_path = venv_dir / "bin" / "pip"
+                python_path = venv_dir / "bin" / "python"
+            
+            # Install pip-tools in the venv
+            cmd = [
+                str(pip_path), "install", "pip-tools"
+            ]
+            subprocess.run(cmd, check=True, capture_output=True)
+            
+            # Use pip-compile to create a lock file
+            cmd = [
+                str(pip_path), "install", "pip-compile"
             ]
             subprocess.run(cmd, check=True, capture_output=True)
             
             cmd = [
-                f"python{python_version}", "-m", "piptools", "compile",
+                str(python_path), "-m", "piptools", "compile",
                 "--output-file", str(req_txt_file),
                 str(req_in_file)
             ]
@@ -145,7 +172,10 @@ class PexBuilder:
             print(f"Successfully created lock file: {req_txt_file}")
             return version_dir
         except subprocess.CalledProcessError as e:
-            print(f"Failed to create lock file: {e.stderr.decode()}")
+            if hasattr(e, 'stderr') and e.stderr:
+                print(f"Failed to create lock file: {e.stderr.decode()}")
+            else:
+                print(f"Failed to create lock file: {e}")
             # Create an empty lock file to avoid repeated failures
             with open(req_txt_file, "w") as f:
                 f.write(f"# Failed to generate lock file for {package_name}=={version}\n")
@@ -181,13 +211,12 @@ class PexBuilder:
         with tempfile.TemporaryDirectory(dir=self.tmp_dir) as temp_dir:
             temp_dir_path = Path(temp_dir)
             
-            # Build PEX file using the lock file
+            # Build PEX file using the lock file and the current Python interpreter
             cmd = [
                 "pex",
                 "-r", str(req_txt_file),
                 "-o", str(pex_path),
-                "--python-shebang", f"/usr/bin/env python{python_version}",
-                "--python", f"python{python_version}",
+                "--python-shebang", f"/usr/bin/env python",
                 "-c", package_name,  # Use package name as entry point
                 "--disable-cache",
                 "--no-pypi",
