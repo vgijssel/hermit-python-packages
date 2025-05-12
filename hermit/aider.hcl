@@ -1,33 +1,31 @@
 description = "Python tool aider-chat packaged as PEX"
-binaries = ["aider-chat"]
-test = "aider-chat --help"
-repository = "https://github.com/hermit-python-packages/hermit-python-packages"
-source-repo = "https://github.com/paul-gauthier/aider"
+binaries = ["aider"]
+test = "aider --help"
+runtime-dependencies = ["python3@3.12"]
+repository = "https://github.com/vgijssel/hermit-python-packages"
 
+// # https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v0.83.1/aider-chat-macos-arm64.pex
 darwin {
-  source = "oci://ghcr.io/hermit-python-packages/aider-chat:${version}-${python-version}-darwin"
-}
-
-linux {
-  source = "oci://ghcr.io/hermit-python-packages/aider-chat:${version}-${python-version}-linux"
+  // # TODO: pinning to arm64 for now
+  source = "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v${version}/aider-chat-macos-arm64.pex"
 }
 
 on "unpack" {
   rename {
-    from = "${root}/app/aider-chat"
-    to = "${root}/aider-chat"
+    from = "${root}/aider-${os}-${arch}"
+    to = "${root}/aider"
   }
-  
+
   chmod {
-    file = "${root}/aider-chat"
-    mode = 493  # 0755 in octal
+    file = "${root}/aider"
+    mode = 493
   }
 }
 
-version "0.80.0" {
-  python-version = "py3.11"
+version "0.83.1" {
+  runtime-dependencies = ["python3@3.12"]
 }
 
-version "0.82.0" {
-  python-version = "py3.12"
+sha256sums = {
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v0.83.1/aider-chat-macos-arm64.pex": "0fe2db473cf16c6e676efc6339bb5fdccbbdaae083a51ed1a8a8fef5dfb863c0",
 }

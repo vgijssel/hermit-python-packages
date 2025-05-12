@@ -306,7 +306,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             print(f"Error checking GitHub release: {e}")
             return False
             
-    def create_github_release(self, package_name: str, version: str, pex_path: Path, script_paths: List[Path] = None) -> bool:
+    def create_github_release(self, package_name: str, version: str, pex_path: Path, script_paths: List[Path]) -> bool:
         """Create a GitHub release and upload the PEX file and binary scripts.
         
         Args:
@@ -318,12 +318,6 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
         Returns:
             True if successful, False otherwise
         """
-        if script_paths is None:
-            script_paths = []
-        if not self.github:
-            print("GitHub client not initialized. Skipping release creation.")
-            return False
-            
         try:
             # Format the tag name and release name
             tag_name = f"{package_name}-v{version}"
@@ -347,7 +341,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             print(f"Uploading PEX file: {pex_path}")
             release.upload_asset(
                 path=str(pex_path),
-                label=f"{package_name}-{version}-{self.os_name}-{self.arch_name}.pex",
+                label=pex_path.name,
                 content_type="application/octet-stream"
             )
             
@@ -425,10 +419,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 script_paths = self.create_binary_scripts(pex_path, actual_package_name, binaries)
                 
                 # Create and upload GitHub release
-                if self.github_token:
-                    self.create_github_release(actual_package_name, version, pex_path, script_paths)
-                else:
-                    print("Skipping GitHub release creation: No GitHub token provided.")
+                self.create_github_release(actual_package_name, version, pex_path, script_paths)
 
             except Exception as e:
                 print(f"Error processing {actual_package_name} {version}: {e}")

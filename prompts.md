@@ -23,12 +23,4 @@ Add in os and arch to the filename. For example: `aider-linux-x86_64.pex`
 
 ## Create GitHub release
 
-```bash
-gh release create aider-chat-v0.83.1 \
-  --title "aider-chat-v0.83.1" \
-  --notes "python_version: 3.12, ..." \
-  --target main \
-  ./aider ./aider-chat-0.83.1-py3.12.pex
-```
-
-# aider-chat-v0.83.1-macos-aarch64
+Call the Github API to list out all releases, use pagination in case there are too many releases. Figure out if there is a release for the current version of the package. If it already exists, skip the package version. If it does not exist, create a new release and upload the pex and binary files into the release. Make sure that the tag of the GitHub release includes both the package name and the version number. For example: `aider-chat-v0.83.1`. Prefer using a Python library to call the GitHub API.
