@@ -306,17 +306,20 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             print(f"Error checking GitHub release: {e}")
             return False
             
-    def create_github_release(self, package_name: str, version: str, pex_path: Path) -> bool:
-        """Create a GitHub release and upload the PEX file.
+    def create_github_release(self, package_name: str, version: str, pex_path: Path, script_paths: List[Path] = None) -> bool:
+        """Create a GitHub release and upload the PEX file and binary scripts.
         
         Args:
             package_name: Name of the package
             version: Version of the package
             pex_path: Path to the PEX file
+            script_paths: List of paths to binary scripts
             
         Returns:
             True if successful, False otherwise
         """
+        if script_paths is None:
+            script_paths = []
         if not self.github:
             print("GitHub client not initialized. Skipping release creation.")
             return False
@@ -348,7 +351,16 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 content_type="application/octet-stream"
             )
             
-            print(f"Successfully created release and uploaded PEX file: {release.html_url}")
+            # Upload any binary scripts
+            for script_path in script_paths:
+                print(f"Uploading binary script: {script_path}")
+                release.upload_asset(
+                    path=str(script_path),
+                    label=script_path.name,
+                    content_type="application/octet-stream"
+                )
+            
+            print(f"Successfully created release and uploaded assets: {release.html_url}")
             return True
             
         except Exception as e:
@@ -414,7 +426,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 
                 # Create and upload GitHub release
                 if self.github_token:
-                    self.create_github_release(actual_package_name, version, pex_path)
+                    self.create_github_release(actual_package_name, version, pex_path, script_paths)
                 else:
                     print("Skipping GitHub release creation: No GitHub token provided.")
 
