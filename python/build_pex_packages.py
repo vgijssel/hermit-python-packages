@@ -6,6 +6,7 @@ Build PEX packages for Python tools and publish them to GitHub OCI registry.
 import argparse
 import json
 import os
+import platform
 import re
 import subprocess
 import sys
@@ -164,7 +165,20 @@ class PexBuilder:
         Returns:
             Path to the built PEX file
         """
-        pex_filename = f"{package_name}.pex"
+        # Get OS and architecture information
+        os_name = platform.system().lower()
+        if os_name == "darwin":
+            os_name = "macos"
+        
+        # Get architecture
+        arch = platform.machine().lower()
+        if arch == "x86_64":
+            arch = "amd64"
+        elif arch == "aarch64" or arch == "arm64":
+            arch = "arm64"
+            
+        # Create PEX filename with OS and architecture
+        pex_filename = f"{package_name}-{os_name}-{arch}.pex"
         pex_path = self.dist_dir / "python" / package_name / str(version) / pex_filename
 
         # Skip if PEX file already exists
