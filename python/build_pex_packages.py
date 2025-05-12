@@ -131,58 +131,26 @@ class PexBuilder:
         
         print(f"Creating lock file for {package_name}=={version} with Python {python_version}")
         
-        # Check if uv is installed
-        try:
-            subprocess.run(["uv", "--version"], check=True, capture_output=True)
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            print("uv not found, installing...")
-            try:
-                # Install uv using curl
-                install_script = self.tmp_dir / "install-uv.sh"
-                with open(install_script, "w") as f:
-                    f.write("#!/bin/bash\n")
-                    f.write('curl -LsSf https://astral.sh/uv/install.sh | sh\n')
-                
-                subprocess.run(["chmod", "+x", str(install_script)], check=True)
-                subprocess.run([str(install_script)], check=True)
-                
-                # Add uv to PATH
-                uv_path = os.path.expanduser("~/.cargo/bin")
-                os.environ["PATH"] = f"{uv_path}:{os.environ['PATH']}"
-            except Exception as e:
-                print(f"Failed to install uv: {e}")
-                # Create a basic lock file as fallback
-                with open(req_txt_file, "w") as f:
-                    f.write(f"# Failed to generate lock file for {package_name}=={version}\n")
-                    f.write(f"{package_name}=={version}\n")
-                return version_dir
-        
         try:
             # Use uv to create a lock file
             cmd = [
                 "uv", "pip", "compile", 
                 "--output-file", str(req_txt_file),
-                str(req_in_file)
+                str(req_in_file),
+                "--python-version", python_version
             ]
-            
-            # Add Python version constraint if specified
-            if python_version:
-                cmd.extend(["--python-version", python_version])
-                
+
+            print(f"Running command: {' '.join(cmd)}")
             subprocess.run(cmd, check=True, capture_output=True)
-            print(f"Successfully created lock file: {req_txt_file}")
+            print(f"Successfully ceated lock file: {req_txt_file}")
             return version_dir
+
         except subprocess.CalledProcessError as e:
             if hasattr(e, 'stderr') and e.stderr:
                 print(f"Failed to create lock file with uv: {e.stderr.decode()}")
             else:
                 print(f"Failed to create lock file with uv: {e}")
-            
-            # Create a basic lock file as fallback
-            with open(req_txt_file, "w") as f:
-                f.write(f"# Failed to generate lock file for {package_name}=={version}\n")
-                f.write(f"{package_name}=={version}\n")
-            return version_dir
+            # raise
     
     def build_pex(self, package_name: str, version: str, python_version: str) -> Path:
         """Build a PEX file for the specified package version.
