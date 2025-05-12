@@ -226,7 +226,7 @@ class PexBuilder:
 SCRIPT_DIR="$( cd "$( dirname "${{BASH_SOURCE[0]}}" )" && pwd )"
 
 # Execute the PEX file with the PEX_SCRIPT environment variable
-exec PEX_SCRIPT={binary} "$SCRIPT_DIR/{pex_path.name}" "$@"
+PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
 """)
             
             # Make the script executable
@@ -371,9 +371,9 @@ on "unpack" {{
             package_name: Name of the package
         """
         config = self.load_config(package_name)
-        actual_package_name = config.get("package", package_name)
-        versions_config = config.get("versions", [])
-        binaries = config.get("binaries", [])
+        actual_package_name = config['package']
+        versions_config = config['versions']
+        binaries = config['binaries']
         
         if not versions_config:
             raise ValueError(f"No versions specified for {package_name}")
@@ -415,8 +415,7 @@ on "unpack" {{
                 pex_path = self.build_pex(actual_package_name, version, python_version)
                 
                 # Create binary scripts
-                if binaries:
-                    self.create_binary_scripts(pex_path, actual_package_name, binaries)
+                self.create_binary_scripts(pex_path, actual_package_name, binaries)
 
                 # # Upload to OCI registry
                 # for platform in ["linux", "darwin"]:
@@ -457,11 +456,11 @@ def main():
         github_token=args.github_token
     )
     
-    try:
-        builder.process_package(args.package)
-    except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
+    # try:
+    builder.process_package(args.package)
+    # except Exception as e:
+    #     print(f"Error: {e}")
+    #     sys.exit(1)
 
 
 if __name__ == "__main__":

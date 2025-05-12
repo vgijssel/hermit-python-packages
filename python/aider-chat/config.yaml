@@ -1,5 +1,6 @@
 binaries:
   - aider
+package: aider-chat
 
 versions:
   - version: 0.83.1
