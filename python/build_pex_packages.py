@@ -17,6 +17,7 @@ import requests
 import semver
 import yaml
 import venv
+import shutil
 
 
 class PexBuilder:
@@ -130,53 +131,54 @@ class PexBuilder:
         
         print(f"Creating lock file for {package_name}=={version} with Python {python_version}")
         
-        # Use a virtual environment to create a lock file
+        # Check if uv is installed
         try:
-            venv_dir = self.tmp_dir / f"venv-{package_name}-{version}-py{python_version}"
-            
-            # Create virtual environment
-            print(f"Creating virtual environment for {package_name}=={version} with Python {python_version}")
-            
-            # Use the current Python to create a venv
+            subprocess.run(["uv", "--version"], check=True, capture_output=True)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            print("uv not found, installing...")
+            try:
+                # Install uv using curl
+                install_script = self.tmp_dir / "install-uv.sh"
+                with open(install_script, "w") as f:
+                    f.write("#!/bin/bash\n")
+                    f.write('curl -LsSf https://astral.sh/uv/install.sh | sh\n')
+                
+                subprocess.run(["chmod", "+x", str(install_script)], check=True)
+                subprocess.run([str(install_script)], check=True)
+                
+                # Add uv to PATH
+                uv_path = os.path.expanduser("~/.cargo/bin")
+                os.environ["PATH"] = f"{uv_path}:{os.environ['PATH']}"
+            except Exception as e:
+                print(f"Failed to install uv: {e}")
+                # Create a basic lock file as fallback
+                with open(req_txt_file, "w") as f:
+                    f.write(f"# Failed to generate lock file for {package_name}=={version}\n")
+                    f.write(f"{package_name}=={version}\n")
+                return version_dir
+        
+        try:
+            # Use uv to create a lock file
             cmd = [
-                sys.executable, "-m", "venv", str(venv_dir)
-            ]
-            subprocess.run(cmd, check=True, capture_output=True)
-            
-            # Determine pip and python paths in the venv
-            if sys.platform == "win32":
-                pip_path = venv_dir / "Scripts" / "pip"
-                python_path = venv_dir / "Scripts" / "python"
-            else:
-                pip_path = venv_dir / "bin" / "pip"
-                python_path = venv_dir / "bin" / "python"
-            
-            # Install pip-tools in the venv
-            cmd = [
-                str(pip_path), "install", "pip-tools"
-            ]
-            subprocess.run(cmd, check=True, capture_output=True)
-            
-            # Use pip-compile to create a lock file
-            cmd = [
-                str(pip_path), "install", "pip-compile"
-            ]
-            subprocess.run(cmd, check=True, capture_output=True)
-            
-            cmd = [
-                str(python_path), "-m", "piptools", "compile",
+                "uv", "pip", "compile", 
                 "--output-file", str(req_txt_file),
                 str(req_in_file)
             ]
+            
+            # Add Python version constraint if specified
+            if python_version:
+                cmd.extend(["--python-version", python_version])
+                
             subprocess.run(cmd, check=True, capture_output=True)
             print(f"Successfully created lock file: {req_txt_file}")
             return version_dir
         except subprocess.CalledProcessError as e:
             if hasattr(e, 'stderr') and e.stderr:
-                print(f"Failed to create lock file: {e.stderr.decode()}")
+                print(f"Failed to create lock file with uv: {e.stderr.decode()}")
             else:
-                print(f"Failed to create lock file: {e}")
-            # Create an empty lock file to avoid repeated failures
+                print(f"Failed to create lock file with uv: {e}")
+            
+            # Create a basic lock file as fallback
             with open(req_txt_file, "w") as f:
                 f.write(f"# Failed to generate lock file for {package_name}=={version}\n")
                 f.write(f"{package_name}=={version}\n")
@@ -219,7 +221,6 @@ class PexBuilder:
                 "--python-shebang", f"/usr/bin/env python",
                 "-c", package_name,  # Use package name as entry point
                 "--disable-cache",
-                "--no-pypi",
                 "--pip-version", "latest"
             ]
             
