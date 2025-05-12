@@ -46,6 +46,23 @@ class PexBuilder:
         self.dist_dir.mkdir(parents=True, exist_ok=True)
         self.tmp_dir.mkdir(parents=True, exist_ok=True)
 
+        # Get OS and architecture information
+        os_name = platform.system().lower()
+        if os_name == "darwin":
+            os_name = "macos"
+
+        self.os_name = os_name
+        
+        # Get architecture
+        arch_name = platform.machine().lower()
+        if arch_name == "x86_64":
+            arch_name = "amd64"
+        elif arch_name == "aarch64" or arch_name == "arm64":
+            arch_name = "arm64"
+
+        self.arch_name = arch_name
+
+
     def load_config(self, package_name: str) -> Dict:
         """Load the package configuration from config.yaml.
         
@@ -165,20 +182,9 @@ class PexBuilder:
         Returns:
             Path to the built PEX file
         """
-        # Get OS and architecture information
-        os_name = platform.system().lower()
-        if os_name == "darwin":
-            os_name = "macos"
-        
-        # Get architecture
-        arch = platform.machine().lower()
-        if arch == "x86_64":
-            arch = "amd64"
-        elif arch == "aarch64" or arch == "arm64":
-            arch = "arm64"
             
         # Create PEX filename with OS and architecture
-        pex_filename = f"{package_name}-{os_name}-{arch}.pex"
+        pex_filename = f"{package_name}-{self.os_name}-{self.arch_name}.pex"
         pex_path = self.dist_dir / "python" / package_name / str(version) / pex_filename
 
         # Skip if PEX file already exists
@@ -232,27 +238,9 @@ class PexBuilder:
         pex_dir = pex_path.parent
         script_paths = []
         
-        # Extract OS and architecture from the PEX filename
-        # Expected format: package-os-arch.pex
-        pex_name_parts = pex_path.stem.split('-')
-        if len(pex_name_parts) >= 3:
-            os_name = pex_name_parts[-2]
-            arch = pex_name_parts[-1]
-        else:
-            # Fallback if the filename doesn't match the expected pattern
-            os_name = platform.system().lower()
-            if os_name == "darwin":
-                os_name = "macos"
-            
-            arch = platform.machine().lower()
-            if arch == "x86_64":
-                arch = "amd64"
-            elif arch == "aarch64" or arch == "arm64":
-                arch = "arm64"
-        
         for binary in binaries:
             # Include OS and architecture in the binary script name
-            script_name = f"{binary}-{os_name}-{arch}"
+            script_name = f"{binary}-{self.os_name}-{self.arch_name}"
             script_path = pex_dir / script_name
             
             # Create the bash script
@@ -272,13 +260,6 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             os.chmod(script_path, 0o755)
             print(f"Created binary script: {script_path}")
             script_paths.append(script_path)
-            
-            # Also create a symlink with the original binary name for backward compatibility
-            symlink_path = pex_dir / binary
-            if symlink_path.exists():
-                symlink_path.unlink()
-            os.symlink(script_path.name, symlink_path)
-            print(f"Created symlink: {symlink_path} -> {script_path.name}")
             
         return script_paths
 
