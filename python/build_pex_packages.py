@@ -26,8 +26,7 @@ from github import Github, GithubException
 class PexBuilder:
     """Build PEX packages for Python tools and publish them to GitHub OCI registry."""
 
-    def __init__(self, package_dir: str, dist_dir: str, tmp_dir: str, github_token: Optional[str] = None,
-                 github_repo: str = "hermit-python-packages/hermit-python-packages"):
+    def __init__(self, package_dir: str, dist_dir: str, tmp_dir: str, github_repo: str, github_token: Optional[str] = None):
         """Initialize the PEX builder.
 
         Args:
@@ -432,7 +431,7 @@ def main():
     parser.add_argument("--tmp-dir", default=os.environ.get("TMP_DIR", "tmp"),
                         help="Directory for temporary files")
     parser.add_argument("--github-token", help="GitHub token for authentication")
-    parser.add_argument("--github-repo", default="hermit-python-packages/hermit-python-packages",
+    parser.add_argument("--github-repo", default="vgijssel/hermit-python-packages",
                         help="GitHub repository name (owner/repo)")
     
     args = parser.parse_args()
