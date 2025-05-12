@@ -24,3 +24,7 @@ Add in os and arch to the filename. For example: `aider-linux-x86_64.pex`
 ## Create GitHub release
 
 Call the Github API to list out all releases, use pagination in case there are too many releases. Figure out if there is a release for the current version of the package. If it already exists, skip the package version. If it does not exist, create a new release and upload the pex and binary files into the release. Make sure that the tag of the GitHub release includes both the package name and the version number. For example: `aider-chat-v0.83.1`. Prefer using a Python library to call the GitHub API.
+
+## Create archive of the pex and bash files
+
+Create a tarball of the pex and bash files for each version. The tarball should be named after the package, os and architecture. For example `aider-chat-macos-arm64.tar.gz`. The tarball should include the PEX file and the bash scripts. The archive is the only thing that's uploaded to the GitHub release. The PEX file and bash scripts should be in the root of the archive. The archive should be created in the dist directory.

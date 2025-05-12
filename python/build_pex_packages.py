@@ -192,8 +192,7 @@ class PexBuilder:
             Path to the built PEX file
         """
             
-        # Create PEX filename with OS and architecture
-        pex_filename = f"{package_name}-{self.os_name}-{self.arch_name}.pex"
+        pex_filename = f"{package_name}.pex"
         pex_path = self.dist_dir / "python" / package_name / str(version) / pex_filename
 
         # Skip if PEX file already exists
@@ -249,7 +248,7 @@ class PexBuilder:
         
         for binary in binaries:
             # Include OS and architecture in the binary script name
-            script_name = f"{binary}-{self.os_name}-{self.arch_name}"
+            script_name = binary
             script_path = pex_dir / script_name
             
             # Create the bash script
