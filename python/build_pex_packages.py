@@ -99,6 +99,59 @@ class PexBuilder:
         valid_versions.sort(key=lambda v: semver.VersionInfo.parse(v))
         return valid_versions
 
+    def create_dependency_files(self, package_name: str, version: str, python_version: str) -> Path:
+        """Create dependency files (requirements.in and requirements.txt) for the specified package version.
+        
+        Args:
+            package_name: Name of the package
+            version: Version of the package
+            python_version: Python version to use
+            
+        Returns:
+            Path to the directory containing the dependency files
+        """
+        # Create directory structure for this version
+        version_dir = self.package_dir / package_name / version
+        version_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Create requirements.in file
+        req_in_file = version_dir / "requirements.in"
+        with open(req_in_file, "w") as f:
+            f.write(f"{package_name}=={version}\n")
+        
+        # Create requirements.txt (lock file)
+        req_txt_file = version_dir / "requirements.txt"
+        
+        # Skip if lock file already exists
+        if req_txt_file.exists():
+            print(f"Lock file already exists: {req_txt_file}")
+            return version_dir
+        
+        print(f"Creating lock file for {package_name}=={version} with Python {python_version}")
+        
+        # Use pip-compile to create a lock file
+        try:
+            cmd = [
+                f"python{python_version}", "-m", "pip", "install", "pip-tools"
+            ]
+            subprocess.run(cmd, check=True, capture_output=True)
+            
+            cmd = [
+                f"python{python_version}", "-m", "piptools", "compile",
+                "--output-file", str(req_txt_file),
+                str(req_in_file)
+            ]
+            subprocess.run(cmd, check=True, capture_output=True)
+            print(f"Successfully created lock file: {req_txt_file}")
+            return version_dir
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to create lock file: {e.stderr.decode()}")
+            # Create an empty lock file to avoid repeated failures
+            with open(req_txt_file, "w") as f:
+                f.write(f"# Failed to generate lock file for {package_name}=={version}\n")
+                f.write(f"{package_name}=={version}\n")
+            return version_dir
+    
     def build_pex(self, package_name: str, version: str, python_version: str) -> Path:
         """Build a PEX file for the specified package version.
         
@@ -120,19 +173,18 @@ class PexBuilder:
         
         print(f"Building PEX for {package_name}=={version} with Python {python_version}")
         
+        # First create dependency files
+        version_dir = self.create_dependency_files(package_name, version, python_version)
+        req_txt_file = version_dir / "requirements.txt"
+        
         # Create a temporary directory for building
         with tempfile.TemporaryDirectory(dir=self.tmp_dir) as temp_dir:
             temp_dir_path = Path(temp_dir)
             
-            # Create requirements.txt
-            req_file = temp_dir_path / "requirements.txt"
-            with open(req_file, "w") as f:
-                f.write(f"{package_name}=={version}\n")
-            
-            # Build PEX file
+            # Build PEX file using the lock file
             cmd = [
                 "pex",
-                "-r", str(req_file),
+                "-r", str(req_txt_file),
                 "-o", str(pex_path),
                 "--python-shebang", f"/usr/bin/env python{python_version}",
                 "--python", f"python{python_version}",
@@ -324,6 +376,10 @@ on "unpack" {{
         built_versions = []
         for version, python_version in version_map.items():
             try:
+                # Create dependency files first
+                self.create_dependency_files(actual_package_name, version, python_version)
+                
+                # Build PEX file
                 pex_path = self.build_pex(actual_package_name, version, python_version)
                 
                 # # Upload to OCI registry
