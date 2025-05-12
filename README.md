@@ -32,4 +32,5 @@ Once the PEX files and bash scripts are ready they are uploaded to GitHub releas
 
 ## Potential Improvements
 
+- [ ] Create a release in "draft" mode. While the release is in draft mode, assets can be uploaded (again) to the release. After all macOS + Linux (arm64/amd64) assets have been uploaded the draft mode is removed.
 - [ ] Query the releases API once and paginate over all the results. Cross reference versions from pypi and versions releases on GitHub. Include only versions for processing that don't have a release or those that have a draft release.
