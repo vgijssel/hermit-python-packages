@@ -1,6 +1,17 @@
 version: '3'
 
 tasks:
-  python:update:
+  3rdparty:python:update:
+    desc: Update lockfile for third party Python dependencies
     cmds:
       - pants generate-lockfiles
+
+  3rdparty:python:venv:
+    desc: Create a virtual environment for third party Python dependencies
+    cmds:
+      - pants export
+
+  pex:build:
+    desc: Run the PEX package builder
+    cmds:
+      - pants run python:build_pex_packages

@@ -11,6 +11,7 @@ The PEX files are published to the GitHub OCI registry and pulled down using HTT
 Each Python package has it's own directory in the `hermit-python-packages` repository. For example `python/aider-chat`. The directory contains a `config.yaml` file that defines the following configuration options:
 
 ```yaml
+package: aider-chat
 versions:
   - version: 0.80.0
     python: 3.11

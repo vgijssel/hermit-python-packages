@@ -290,13 +290,14 @@ on "unpack" {{
         if not versions_config:
             raise ValueError(f"No versions specified for {package_name}")
         
+        # TODO: sort the list of versions by version number and get the lowest version
         # Get the lowest version
         min_version = versions_config[0]["version"]
         
         # Get all versions from PyPI
         all_versions = self.get_pypi_versions(actual_package_name, min_version)
         print(f"Found {len(all_versions)} versions for {actual_package_name} >= {min_version}")
-        
+
         # Map Python versions to package versions
         version_map = {}
         for version_info in versions_config:
@@ -314,26 +315,26 @@ on "unpack" {{
             for v in all_versions:
                 if semver.compare(v, version) >= 0 and (next_version is None or semver.compare(v, next_version) < 0):
                     version_map[v] = python_version
-        
+
         # Build PEX files for each version
         built_versions = []
         for version, python_version in version_map.items():
             try:
                 pex_path = self.build_pex(actual_package_name, version, python_version)
                 
-                # Upload to OCI registry
-                for platform in ["linux", "darwin"]:
-                    self.upload_to_oci(pex_path, actual_package_name, version, python_version, platform)
+                # # Upload to OCI registry
+                # for platform in ["linux", "darwin"]:
+                #     self.upload_to_oci(pex_path, actual_package_name, version, python_version, platform)
                 
-                built_versions.append({
-                    "version": version,
-                    "python": python_version
-                })
+                # built_versions.append({
+                #     "version": version,
+                #     "python": python_version
+                # })
             except Exception as e:
                 print(f"Error processing {actual_package_name} {version}: {e}")
         
         # Update Hermit manifest
-        self.update_hermit_manifest(actual_package_name, built_versions)
+        # self.update_hermit_manifest(actual_package_name, built_versions)
 
 
 def main():
