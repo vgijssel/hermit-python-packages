@@ -202,6 +202,37 @@ class PexBuilder:
             print(f"Failed to build PEX: {e.stderr.decode()}")
             raise
 
+    def create_binary_scripts(self, pex_path: Path, package_name: str, binaries: List[str]) -> None:
+        """Create bash scripts for each binary that invoke the PEX file.
+        
+        Args:
+            pex_path: Path to the PEX file
+            package_name: Name of the package
+            binaries: List of binary names to create scripts for
+        """
+        # Get the directory where the PEX file is located
+        pex_dir = pex_path.parent
+        
+        for binary in binaries:
+            script_path = pex_dir / binary
+            
+            # Create the bash script
+            with open(script_path, "w") as f:
+                f.write(f"""#!/bin/bash
+# Auto-generated script for {binary}
+# Executes the PEX file looking for the entry point with the same name
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${{BASH_SOURCE[0]}}" )" && pwd )"
+
+# Execute the PEX file with the binary name as the entry point
+exec "$SCRIPT_DIR/{pex_path.name}" "{binary}" "$@"
+""")
+            
+            # Make the script executable
+            os.chmod(script_path, 0o755)
+            print(f"Created binary script: {script_path}")
+
     def upload_to_oci(self, pex_path: Path, package_name: str, version: str, 
                      python_version: str, platform: str = "linux") -> str:
         """Upload a PEX file to GitHub OCI registry.
@@ -342,6 +373,7 @@ on "unpack" {{
         config = self.load_config(package_name)
         actual_package_name = config.get("package", package_name)
         versions_config = config.get("versions", [])
+        binaries = config.get("binaries", [])
         
         if not versions_config:
             raise ValueError(f"No versions specified for {package_name}")
@@ -381,6 +413,10 @@ on "unpack" {{
                 
                 # Build PEX file
                 pex_path = self.build_pex(actual_package_name, version, python_version)
+                
+                # Create binary scripts
+                if binaries:
+                    self.create_binary_scripts(pex_path, actual_package_name, binaries)
 
                 # # Upload to OCI registry
                 # for platform in ["linux", "darwin"]:
