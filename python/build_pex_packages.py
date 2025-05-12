@@ -13,7 +13,7 @@ import sys
 import tarfile
 import tempfile
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 import shutil
 
 import requests
@@ -268,7 +268,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             
         return script_paths
 
-    def check_github_release_exists(self, package_name: str, version: str) -> bool:
+    def check_github_release_exists(self, package_name: str, version: str) -> Tuple[bool, Optional[object], bool]:
         """Check if a GitHub release already exists for the given package and version.
         
         Args:
@@ -276,11 +276,14 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             version: Version of the package
             
         Returns:
-            True if the release exists, False otherwise
+            Tuple of (exists, release_object, is_draft)
+            - exists: True if the release exists, False otherwise
+            - release_object: The release object if it exists, None otherwise
+            - is_draft: True if the release exists and is in draft mode, False otherwise
         """
         if not self.github:
             print("GitHub client not initialized. Skipping release check.")
-            return False
+            return False, None, False
             
         try:
             # Format the tag name as package-name-vX.Y.Z
@@ -291,17 +294,23 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             
             try:
                 # Try to get the release by tag name
-                repo.get_release(tag_name)
-                print(f"Release {tag_name} already exists.")
-                return True
+                release = repo.get_release(tag_name)
+                is_draft = release.draft
+                
+                if is_draft:
+                    print(f"Release {tag_name} exists and is in draft mode.")
+                else:
+                    print(f"Release {tag_name} exists and is published.")
+                    
+                return True, release, is_draft
             except GithubException:
                 # Release doesn't exist
                 print(f"Release {tag_name} does not exist.")
-                return False
+                return False, None, False
                 
         except Exception as e:
             print(f"Error checking GitHub release: {e}")
-            return False
+            return False, None, False
             
     def create_tarball(self, package_name: str, version: str, pex_path: Path, script_paths: List[Path]) -> Path:
         """Create a tarball containing the PEX file and binary scripts.
@@ -338,7 +347,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             print(f"Created tarball: {tarball_path}")
             return tarball_path
 
-    def create_github_release(self, package_name: str, version: str, pex_path: Path, script_paths: List[Path]) -> bool:
+    def create_github_release(self, package_name: str, version: str, pex_path: Path, script_paths: List[Path]) -> Tuple[bool, Optional[object]]:
         """Create a GitHub release and upload the tarball containing PEX file and binary scripts.
         
         Args:
@@ -348,7 +357,9 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             script_paths: List of paths to binary scripts
             
         Returns:
-            True if successful, False otherwise
+            Tuple of (success, release_object)
+            - success: True if successful, False otherwise
+            - release_object: The release object if successful, None otherwise
         """
         try:
             # Format the tag name and release name
@@ -358,35 +369,93 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             # Get the repository
             repo = self.github.get_repo(self.github_repo)
             
-            # Create the release
-            print(f"Creating GitHub release: {release_name}")
-            release_message = f"Release of {package_name} version {version} for {self.os_name}-{self.arch_name}"
-            release = repo.create_git_release(
-                tag=tag_name,
-                name=release_name,
-                message=release_message,
-                draft=False,
-                prerelease=False
-            )
+            # Check if release already exists
+            release = None
+            try:
+                release = repo.get_release(tag_name)
+                print(f"Found existing release: {release_name}")
+            except GithubException:
+                # Create the release in draft mode
+                print(f"Creating GitHub release: {release_name} (draft mode)")
+                release_message = f"Release of {package_name} version {version}"
+                release = repo.create_git_release(
+                    tag=tag_name,
+                    name=release_name,
+                    message=release_message,
+                    draft=True,  # Create in draft mode
+                    prerelease=False
+                )
             
             # Create tarball containing PEX file and binary scripts
             tarball_path = self.create_tarball(package_name, version, pex_path, script_paths)
             
             # Upload the tarball
+            asset_name = f"{package_name}-{self.os_name}-{self.arch_name}.tar.gz"
+            
+            # Check if asset already exists
+            for asset in release.get_assets():
+                if asset.name == asset_name:
+                    print(f"Asset {asset_name} already exists, deleting it")
+                    asset.delete_asset()
+            
             print(f"Uploading tarball: {tarball_path}")
             release.upload_asset(
                 path=str(tarball_path),
-                label=tarball_path.name,
+                name=asset_name,
                 content_type="application/gzip"
             )
             
-            print(f"Successfully created release and uploaded tarball: {release.html_url}")
-            return True
+            print(f"Successfully uploaded tarball to release: {release.html_url}")
+            return True, release
             
         except Exception as e:
-            print(f"Error creating GitHub release: {e}")
-            return False
+            print(f"Error creating/updating GitHub release: {e}")
+            return False, None
 
+    def check_and_finalize_release(self, release, package_name: str, version: str) -> bool:
+        """Check if all platform assets are uploaded and finalize the release if they are.
+        
+        Args:
+            release: GitHub release object
+            package_name: Name of the package
+            version: Version of the package
+            
+        Returns:
+            True if the release was finalized, False otherwise
+        """
+        if not release or not release.draft:
+            return False
+            
+        # Expected assets for all platforms
+        expected_assets = [
+            f"{package_name}-macos-arm64.tar.gz",
+            f"{package_name}-macos-amd64.tar.gz",
+            f"{package_name}-linux-arm64.tar.gz",
+            f"{package_name}-linux-amd64.tar.gz"
+        ]
+        
+        # Get all assets
+        assets = [asset.name for asset in release.get_assets()]
+        
+        # Check if all expected assets are present
+        missing_assets = [asset for asset in expected_assets if asset not in assets]
+        
+        if missing_assets:
+            print(f"Release {release.tag_name} is missing assets: {missing_assets}")
+            print(f"Release will remain in draft mode until all assets are uploaded.")
+            return False
+        
+        # All assets are present, finalize the release
+        print(f"All platform assets are present for {release.tag_name}, finalizing release.")
+        release.update_release(
+            name=release.title,
+            message=release.body,
+            draft=False,  # Remove draft status
+            prerelease=False
+        )
+        print(f"Release {release.tag_name} has been finalized: {release.html_url}")
+        return True
+        
     def process_package(self, package_name: str) -> None:
         """Process a package: build PEX files and update Hermit manifest.
         
@@ -431,8 +500,11 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
         for version, python_version in version_map.items():
             try:
                 # Check if GitHub release already exists
-                if self.check_github_release_exists(actual_package_name, version):
-                    print(f"Skipping {actual_package_name} {version} as GitHub release already exists.")
+                exists, release, is_draft = self.check_github_release_exists(actual_package_name, version)
+                
+                # Skip if release exists and is not in draft mode
+                if exists and not is_draft:
+                    print(f"Skipping {actual_package_name} {version} as GitHub release already exists and is published.")
                     continue
                 
                 # Create dependency files first
@@ -444,8 +516,12 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 # Create binary scripts
                 script_paths = self.create_binary_scripts(pex_path, actual_package_name, binaries)
                 
-                # Create and upload GitHub release
-                self.create_github_release(actual_package_name, version, pex_path, script_paths)
+                # Create/update and upload GitHub release
+                success, release = self.create_github_release(actual_package_name, version, pex_path, script_paths)
+                
+                # Check if all platform assets are uploaded and finalize the release
+                if success and release:
+                    self.check_and_finalize_release(release, actual_package_name, version)
 
             except Exception as e:
                 print(f"Error processing {actual_package_name} {version}: {e}")
