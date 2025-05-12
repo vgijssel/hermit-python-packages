@@ -435,7 +435,11 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
         Returns:
             True if the release was finalized, False otherwise
         """
-        if not release or not release.draft:
+        if not release:
+            return False
+            
+        # Skip if the release is neither draft nor prerelease
+        if not release.draft and not release.prerelease:
             return False
             
         # Expected assets for all platforms
@@ -453,8 +457,9 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
         missing_assets = [asset for asset in expected_assets if asset not in assets]
         
         if missing_assets:
+            status = "draft" if release.draft else "prerelease"
             print(f"Release {release.tag_name} is missing assets: {missing_assets}")
-            print(f"Release will remain in draft mode until all assets are uploaded.")
+            print(f"Release will remain in {status} mode until all assets are uploaded.")
             return False
         
         # All assets are present, finalize the release
@@ -463,7 +468,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             name=release.title,
             message=release.body,
             draft=False,  # Remove draft status
-            prerelease=False
+            prerelease=False  # Remove prerelease status
         )
         print(f"Release {release.tag_name} has been finalized: {release.html_url}")
         return True
