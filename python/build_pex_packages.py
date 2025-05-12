@@ -20,12 +20,14 @@ import semver
 import yaml
 import venv
 import shutil
+from github import Github, GithubException
 
 
 class PexBuilder:
     """Build PEX packages for Python tools and publish them to GitHub OCI registry."""
 
-    def __init__(self, package_dir: str, dist_dir: str, tmp_dir: str, github_token: Optional[str] = None):
+    def __init__(self, package_dir: str, dist_dir: str, tmp_dir: str, github_token: Optional[str] = None,
+                 github_repo: str = "hermit-python-packages/hermit-python-packages"):
         """Initialize the PEX builder.
 
         Args:
@@ -33,14 +35,16 @@ class PexBuilder:
             dist_dir: Directory to store the built PEX files
             tmp_dir: Directory for temporary files
             github_token: GitHub token for authentication
+            github_repo: GitHub repository name (owner/repo)
         """
         self.package_dir = Path(package_dir)
         self.dist_dir = Path(dist_dir)
         self.tmp_dir = Path(tmp_dir)
         self.github_token = github_token or os.environ.get("GITHUB_TOKEN")
+        self.github_repo = github_repo
         
         if not self.github_token:
-            print("Warning: GITHUB_TOKEN not set. OCI registry uploads may fail.")
+            print("Warning: GITHUB_TOKEN not set. GitHub API operations will fail.")
         
         # Create directories if they don't exist
         self.dist_dir.mkdir(parents=True, exist_ok=True)
@@ -61,6 +65,11 @@ class PexBuilder:
             arch_name = "arm64"
 
         self.arch_name = arch_name
+        
+        # Initialize GitHub client if token is available
+        self.github = None
+        if self.github_token:
+            self.github = Github(self.github_token)
 
 
     def load_config(self, package_name: str) -> Dict:
@@ -263,6 +272,90 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             
         return script_paths
 
+    def check_github_release_exists(self, package_name: str, version: str) -> bool:
+        """Check if a GitHub release already exists for the given package and version.
+        
+        Args:
+            package_name: Name of the package
+            version: Version of the package
+            
+        Returns:
+            True if the release exists, False otherwise
+        """
+        if not self.github:
+            print("GitHub client not initialized. Skipping release check.")
+            return False
+            
+        try:
+            # Format the tag name as package-name-vX.Y.Z
+            tag_name = f"{package_name}-v{version}"
+            
+            # Get the repository
+            repo = self.github.get_repo(self.github_repo)
+            
+            try:
+                # Try to get the release by tag name
+                repo.get_release(tag_name)
+                print(f"Release {tag_name} already exists.")
+                return True
+            except GithubException:
+                # Release doesn't exist
+                print(f"Release {tag_name} does not exist.")
+                return False
+                
+        except Exception as e:
+            print(f"Error checking GitHub release: {e}")
+            return False
+            
+    def create_github_release(self, package_name: str, version: str, pex_path: Path) -> bool:
+        """Create a GitHub release and upload the PEX file.
+        
+        Args:
+            package_name: Name of the package
+            version: Version of the package
+            pex_path: Path to the PEX file
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.github:
+            print("GitHub client not initialized. Skipping release creation.")
+            return False
+            
+        try:
+            # Format the tag name and release name
+            tag_name = f"{package_name}-v{version}"
+            release_name = f"{package_name} v{version}"
+            
+            # Get the repository
+            repo = self.github.get_repo(self.github_repo)
+            
+            # Create the release
+            print(f"Creating GitHub release: {release_name}")
+            release_message = f"Release of {package_name} version {version} for {self.os_name}-{self.arch_name}"
+            release = repo.create_git_release(
+                tag=tag_name,
+                name=release_name,
+                message=release_message,
+                draft=False,
+                prerelease=False
+            )
+            
+            # Upload the PEX file
+            print(f"Uploading PEX file: {pex_path}")
+            release.upload_asset(
+                path=str(pex_path),
+                label=f"{package_name}-{version}-{self.os_name}-{self.arch_name}.pex",
+                content_type="application/octet-stream"
+            )
+            
+            print(f"Successfully created release and uploaded PEX file: {release.html_url}")
+            return True
+            
+        except Exception as e:
+            print(f"Error creating GitHub release: {e}")
+            return False
+
     def process_package(self, package_name: str) -> None:
         """Process a package: build PEX files and update Hermit manifest.
         
@@ -306,6 +399,11 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
         # Build PEX files for each version
         for version, python_version in version_map.items():
             try:
+                # Check if GitHub release already exists
+                if self.check_github_release_exists(actual_package_name, version):
+                    print(f"Skipping {actual_package_name} {version} as GitHub release already exists.")
+                    continue
+                
                 # Create dependency files first
                 self.create_dependency_files(actual_package_name, version, python_version)
                 
@@ -314,6 +412,12 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 
                 # Create binary scripts
                 script_paths = self.create_binary_scripts(pex_path, actual_package_name, binaries)
+                
+                # Create and upload GitHub release
+                if self.github_token:
+                    self.create_github_release(actual_package_name, version, pex_path)
+                else:
+                    print("Skipping GitHub release creation: No GitHub token provided.")
 
             except Exception as e:
                 print(f"Error processing {actual_package_name} {version}: {e}")
@@ -328,6 +432,8 @@ def main():
     parser.add_argument("--tmp-dir", default=os.environ.get("TMP_DIR", "tmp"),
                         help="Directory for temporary files")
     parser.add_argument("--github-token", help="GitHub token for authentication")
+    parser.add_argument("--github-repo", default="hermit-python-packages/hermit-python-packages",
+                        help="GitHub repository name (owner/repo)")
     
     args = parser.parse_args()
     
@@ -340,7 +446,8 @@ def main():
         package_dir=package_dir,
         dist_dir=args.dist_dir,
         tmp_dir=args.tmp_dir,
-        github_token=args.github_token
+        github_token=args.github_token,
+        github_repo=args.github_repo
     )
     
     # try:
