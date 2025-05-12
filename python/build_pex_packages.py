@@ -225,8 +225,8 @@ class PexBuilder:
 # Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${{BASH_SOURCE[0]}}" )" && pwd )"
 
-# Execute the PEX file with the binary name as the entry point
-exec "$SCRIPT_DIR/{pex_path.name}" "{binary}" "$@"
+# Execute the PEX file with the PEX_SCRIPT environment variable
+exec PEX_SCRIPT={binary} "$SCRIPT_DIR/{pex_path.name}" "$@"
 """)
             
             # Make the script executable
