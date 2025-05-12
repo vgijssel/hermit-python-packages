@@ -61,6 +61,10 @@ class PexBuilder:
         # If package name is not specified in config, use directory name
         if "package" not in config:
             config["package"] = package_name
+        
+        # Sort versions by semver if they exist
+        if "versions" in config:
+            config["versions"] = sorted(config["versions"], key=lambda v: semver.VersionInfo.parse(v["version"]))
             
         return config
 
@@ -290,9 +294,9 @@ on "unpack" {{
         if not versions_config:
             raise ValueError(f"No versions specified for {package_name}")
         
-        # TODO: sort the list of versions by version number and get the lowest version
-        # Get the lowest version
-        min_version = versions_config[0]["version"]
+        # Sort versions by semver and get the lowest version
+        sorted_versions = sorted(versions_config, key=lambda v: semver.VersionInfo.parse(v["version"]))
+        min_version = sorted_versions[0]["version"]
         
         # Get all versions from PyPI
         all_versions = self.get_pypi_versions(actual_package_name, min_version)
