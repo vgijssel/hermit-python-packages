@@ -1,0 +1,6 @@
+versions:
+  - version: 0.80.0
+    python: 3.11
+
+  - version: 0.82.0
+    python: 3.12
