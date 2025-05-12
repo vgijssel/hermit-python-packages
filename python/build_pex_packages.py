@@ -52,9 +52,6 @@ class PexBuilder:
 
         # Get OS and architecture information
         os_name = platform.system().lower()
-        if os_name == "darwin":
-            os_name = "macos"
-
         self.os_name = os_name
         
         # Get architecture
