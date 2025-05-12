@@ -164,8 +164,8 @@ class PexBuilder:
         Returns:
             Path to the built PEX file
         """
-        pex_filename = f"{package_name}-{version}-py{python_version}.pex"
-        pex_path = self.dist_dir / "python" / package_name / str(python_version) / pex_filename
+        pex_filename = f"{package_name}.pex"
+        pex_path = self.dist_dir / "python" / package_name / str(version) / pex_filename
 
         # Skip if PEX file already exists
         if pex_path.exists():
@@ -241,165 +241,6 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             
         return script_paths
 
-    def create_archive(self, pex_path: Path, script_paths: List[Path]) -> Path:
-        """Create a tar.gz archive containing the PEX file and binary scripts.
-        
-        Args:
-            pex_path: Path to the PEX file
-            script_paths: List of paths to the binary scripts
-            
-        Returns:
-            Path to the created archive
-        """
-        # Create archive name based on the PEX file name
-        archive_name = pex_path.stem + ".tar.gz"
-        archive_path = pex_path.parent / archive_name
-        
-        print(f"Creating archive: {archive_path}")
-        
-        # Create tar.gz archive
-        with tarfile.open(archive_path, "w:gz") as tar:
-            # Add PEX file to archive
-            tar.add(pex_path, arcname=pex_path.name)
-            
-            # Add binary scripts to archive
-            for script_path in script_paths:
-                tar.add(script_path, arcname=script_path.name)
-        
-        print(f"Successfully created archive: {archive_path}")
-        return archive_path
-
-    def upload_to_oci(self, pex_path: Path, package_name: str, version: str, 
-                     python_version: str, platform: str = "linux") -> str:
-        """Upload a PEX file to GitHub OCI registry.
-        
-        Args:
-            pex_path: Path to the PEX file
-            package_name: Name of the package
-            version: Version of the package
-            python_version: Python version used
-            platform: Platform (linux or darwin)
-            
-        Returns:
-            OCI reference to the uploaded blob
-        """
-        # GitHub OCI registry URL
-        registry = "ghcr.io"
-        repo_owner = os.environ.get("GITHUB_REPOSITORY_OWNER", "hermit-python-packages")
-        image_name = f"{registry}/{repo_owner}/{package_name}"
-        tag = f"{version}-py{python_version}-{platform}"
-        
-        print(f"Uploading {pex_path} to {image_name}:{tag}")
-        
-        # Use Docker to push the PEX file as a single-layer image
-        with tempfile.TemporaryDirectory(dir=self.tmp_dir) as temp_dir:
-            temp_dir_path = Path(temp_dir)
-            
-            # Create a Dockerfile
-            dockerfile = temp_dir_path / "Dockerfile"
-            with open(dockerfile, "w") as f:
-                f.write(f"FROM scratch\n")
-                f.write(f"COPY {pex_path.name} /app/{package_name}\n")
-                f.write(f"CMD [\"/app/{package_name}\"]\n")
-            
-            # Copy PEX file to temp dir
-            subprocess.run(["cp", str(pex_path), temp_dir], check=True)
-            
-            # Build and push Docker image
-            image_ref = f"{image_name}:{tag}"
-            
-            # Login to GitHub Container Registry
-            if self.github_token:
-                login_cmd = [
-                    "docker", "login", registry,
-                    "-u", repo_owner,
-                    "--password-stdin"
-                ]
-                login_proc = subprocess.Popen(login_cmd, stdin=subprocess.PIPE)
-                login_proc.communicate(input=self.github_token.encode())
-                if login_proc.returncode != 0:
-                    raise RuntimeError("Failed to login to GitHub Container Registry")
-            
-            # Build image
-            build_cmd = [
-                "docker", "build",
-                "-t", image_ref,
-                "-f", str(dockerfile),
-                str(temp_dir_path)
-            ]
-            subprocess.run(build_cmd, check=True)
-            
-            # Push image
-            push_cmd = ["docker", "push", image_ref]
-            subprocess.run(push_cmd, check=True)
-            
-            # Get image digest
-            inspect_cmd = [
-                "docker", "inspect",
-                "--format", "{{index .RepoDigests 0}}",
-                image_ref
-            ]
-            result = subprocess.run(inspect_cmd, check=True, capture_output=True, text=True)
-            digest = result.stdout.strip()
-            
-            print(f"Uploaded to {digest}")
-            return digest
-
-    def update_hermit_manifest(self, package_name: str, versions: List[Dict]) -> None:
-        """Update the Hermit manifest file for the package.
-        
-        Args:
-            package_name: Name of the package
-            versions: List of version configurations
-        """
-        manifest_path = Path("hermit") / f"{package_name}.hcl"
-        
-        # Create basic manifest structure
-        manifest = f"""description = "Python tool {package_name} packaged as PEX"
-binaries = ["{package_name}"]
-test = "{package_name} --help"
-repository = "https://github.com/hermit-python-packages/hermit-python-packages"
-source-repo = "https://github.com/paul-gauthier/aider"
-
-darwin {{
-  source = "oci://ghcr.io/hermit-python-packages/{package_name}:${{version}}-${{python-version}}-darwin"
-}}
-
-linux {{
-  source = "oci://ghcr.io/hermit-python-packages/{package_name}:${{version}}-${{python-version}}-linux"
-}}
-
-on "unpack" {{
-  rename {{
-    from = "${{root}}/app/{package_name}"
-    to = "${{root}}/{package_name}"
-  }}
-  
-  chmod {{
-    file = "${{root}}/{package_name}"
-    mode = 493  # 0755 in octal
-  }}
-}}
-
-"""
-        
-        # Add version blocks
-        for version_info in versions:
-            version = version_info["version"]
-            python_version = version_info["python"]
-            
-            manifest += f"""version "{version}" {{
-  python-version = "py{python_version}"
-}}
-
-"""
-        
-        # Write manifest file
-        with open(manifest_path, "w") as f:
-            f.write(manifest)
-            
-        print(f"Updated Hermit manifest: {manifest_path}")
-
     def process_package(self, package_name: str) -> None:
         """Process a package: build PEX files and update Hermit manifest.
         
@@ -441,7 +282,6 @@ on "unpack" {{
                     version_map[v] = python_version
 
         # Build PEX files for each version
-        built_versions = []
         for version, python_version in version_map.items():
             try:
                 # Create dependency files first
@@ -452,23 +292,9 @@ on "unpack" {{
                 
                 # Create binary scripts
                 script_paths = self.create_binary_scripts(pex_path, actual_package_name, binaries)
-                
-                # Create archive with PEX file and binary scripts
-                archive_path = self.create_archive(pex_path, script_paths)
 
-                # # Upload to OCI registry
-                # for platform in ["linux", "darwin"]:
-                #     self.upload_to_oci(pex_path, actual_package_name, version, python_version, platform)
-                
-                # built_versions.append({
-                #     "version": version,
-                #     "python": python_version
-                # })
             except Exception as e:
                 print(f"Error processing {actual_package_name} {version}: {e}")
-        
-        # Update Hermit manifest
-        # self.update_hermit_manifest(actual_package_name, built_versions)
 
 
 def main():
