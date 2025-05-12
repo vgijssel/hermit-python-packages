@@ -28,3 +28,7 @@ Call the Github API to list out all releases, use pagination in case there are t
 ## Create archive of the pex and bash files
 
 Create a tarball of the pex and bash files for each version. The tarball should be named after the package, os and architecture. For example `aider-chat-macos-arm64.tar.gz`. The tarball should include the PEX file and the bash scripts. The archive is the only thing that's uploaded to the GitHub release. The PEX file and bash scripts should be in the root of the archive. The archive should be created in the dist directory.
+
+## Pre-Release
+
+Create a release in "prerelease" mode. While the release is in prerelease mode, assets can be uploaded (again) to the release. If a release is in prerelease mode it will not be skipped by the pex builder. Only after all macOS arm64 / amd64 assets and linux arm64 / amd64 assets have been uploaded the prerelease mode is removed.
