@@ -206,9 +206,6 @@ class PexBuilder:
             "pex",
             "-r", str(req_txt_file),
             "-o", str(pex_path),
-            "--compression-level", "9",  # Maximum compression
-            "--compress-abi", "True",
-            "--compress", "True",
         ]
             
         try:
