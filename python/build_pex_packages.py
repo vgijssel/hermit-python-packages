@@ -164,8 +164,8 @@ class PexBuilder:
             Path to the built PEX file
         """
         pex_filename = f"{package_name}-{version}-py{python_version}.pex"
-        pex_path = self.dist_dir / pex_filename
-        
+        pex_path = self.dist_dir / "python" / package_name / str(python_version) / pex_filename
+
         # Skip if PEX file already exists
         if pex_path.exists():
             print(f"PEX file already exists: {pex_path}")
@@ -180,9 +180,10 @@ class PexBuilder:
         # Run uv tool to create PEX file
         cmd = [
             "uv",
+            "tool",
             "run",
             "--python",
-            f"3.{python_version.split('.')[1]}",  # Convert 3.12 to just 3.12
+            str(python_version),
             "--isolated",
             "--managed-python",
             "--from",
@@ -190,9 +191,6 @@ class PexBuilder:
             "pex",
             "-r", str(req_txt_file),
             "-o", str(pex_path),
-            "--python-shebang", f"/usr/bin/env python3.{python_version.split('.')[1]}",
-            "-c", package_name,  # Use package name as entry point
-            "--no-pypi"
         ]
             
         try:

@@ -13,6 +13,4 @@ As described in README.md can you implement a Python script using Pants that doe
 
 ## Creating executable scripts
 
-After the pex file is built for a particular version in the dist directory, for example `dist/aider/0.83.1/aider-chat-0.83.1-py3.12.pex`, create an executable Bash script inside the same directory as the pex file for each item in the "binaries" configuration option. The bash script will be invoked as "PEX_SCRIPT=aider aider-chat-0.83.1-py3.12.pex" and will execute the pex file with the appropriate arguments. The script should be named after the binary, for example `dist/aider/0.83.1/aider`. The script should be executable and should contain the following lines:
-
-```bash
+After the pex file is built for a particular version in the dist directory, for example `dist/aider/0.83.1/aider-chat-0.83.1-py3.12.pex`, create an executable Bash script inside the same directory as the pex file for each item in the "binaries" configuration option. The bash script will be invoked as "PEX_SCRIPT=aider aider-chat-0.83.1-py3.12.pex" and will execute the pex file with the appropriate arguments. The script should be named after the binary, for example `dist/aider/0.83.1/aider`. 
