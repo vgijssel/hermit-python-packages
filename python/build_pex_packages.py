@@ -381,7 +381,7 @@ on "unpack" {{
                 
                 # Build PEX file
                 pex_path = self.build_pex(actual_package_name, version, python_version)
-                
+
                 # # Upload to OCI registry
                 # for platform in ["linux", "darwin"]:
                 #     self.upload_to_oci(pex_path, actual_package_name, version, python_version, platform)
