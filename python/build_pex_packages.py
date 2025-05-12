@@ -14,6 +14,7 @@ import tarfile
 import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+import shutil
 
 import requests
 import semver
@@ -306,8 +307,43 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             print(f"Error checking GitHub release: {e}")
             return False
             
+    def create_tarball(self, package_name: str, version: str, pex_path: Path, script_paths: List[Path]) -> Path:
+        """Create a tarball containing the PEX file and binary scripts.
+        
+        Args:
+            package_name: Name of the package
+            version: Version of the package
+            pex_path: Path to the PEX file
+            script_paths: List of paths to binary scripts
+            
+        Returns:
+            Path to the created tarball
+        """
+        # Create tarball filename with OS and architecture
+        tarball_filename = f"{package_name}-{self.os_name}-{self.arch_name}.tar.gz"
+        tarball_path = self.dist_dir / "python" / package_name / str(version) / tarball_filename
+        
+        # Create a temporary directory to stage files
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_dir_path = Path(temp_dir)
+            
+            # Copy PEX file to temp directory
+            shutil.copy2(pex_path, temp_dir_path / pex_path.name)
+            
+            # Copy binary scripts to temp directory
+            for script_path in script_paths:
+                shutil.copy2(script_path, temp_dir_path / script_path.name)
+            
+            # Create tarball
+            with tarfile.open(tarball_path, "w:gz") as tar:
+                for file_path in os.listdir(temp_dir):
+                    tar.add(os.path.join(temp_dir, file_path), arcname=file_path)
+            
+            print(f"Created tarball: {tarball_path}")
+            return tarball_path
+
     def create_github_release(self, package_name: str, version: str, pex_path: Path, script_paths: List[Path]) -> bool:
-        """Create a GitHub release and upload the PEX file and binary scripts.
+        """Create a GitHub release and upload the tarball containing PEX file and binary scripts.
         
         Args:
             package_name: Name of the package
@@ -337,24 +373,18 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 prerelease=False
             )
             
-            # Upload the PEX file
-            print(f"Uploading PEX file: {pex_path}")
+            # Create tarball containing PEX file and binary scripts
+            tarball_path = self.create_tarball(package_name, version, pex_path, script_paths)
+            
+            # Upload the tarball
+            print(f"Uploading tarball: {tarball_path}")
             release.upload_asset(
-                path=str(pex_path),
-                label=pex_path.name,
-                content_type="application/octet-stream"
+                path=str(tarball_path),
+                label=tarball_path.name,
+                content_type="application/gzip"
             )
             
-            # Upload any binary scripts
-            for script_path in script_paths:
-                print(f"Uploading binary script: {script_path}")
-                release.upload_asset(
-                    path=str(script_path),
-                    label=script_path.name,
-                    content_type="application/octet-stream"
-                )
-            
-            print(f"Successfully created release and uploaded assets: {release.html_url}")
+            print(f"Successfully created release and uploaded tarball: {release.html_url}")
             return True
             
         except Exception as e:
