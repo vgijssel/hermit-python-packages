@@ -268,7 +268,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             
         return script_paths
 
-    def check_github_release_exists(self, package_name: str, version: str) -> Tuple[bool, Optional[object], bool, bool]:
+    def check_github_release_exists(self, package_name: str, version: str) -> Tuple[bool, Optional[object], bool]:
         """Check if a GitHub release already exists for the given package and version.
         
         Args:
@@ -276,10 +276,9 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             version: Version of the package
             
         Returns:
-            Tuple of (exists, release_object, is_draft, is_prerelease)
+            Tuple of (exists, release_object, is_prerelease)
             - exists: True if the release exists, False otherwise
             - release_object: The release object if it exists, None otherwise
-            - is_draft: True if the release exists and is in draft mode, False otherwise
             - is_prerelease: True if the release exists and is in prerelease mode, False otherwise
         """
         try:
@@ -292,25 +291,22 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             try:
                 # Try to get the release by tag name
                 release = repo.get_release(tag_name)
-                is_draft = release.draft
                 is_prerelease = release.prerelease
                 
-                if is_draft:
-                    print(f"Release {tag_name} exists and is in draft mode.")
-                elif is_prerelease:
+                if is_prerelease:
                     print(f"Release {tag_name} exists and is in prerelease mode.")
                 else:
                     print(f"Release {tag_name} exists and is published.")
                     
-                return True, release, is_draft, is_prerelease
+                return True, release, is_prerelease
             except GithubException:
                 # Release doesn't exist
                 print(f"Release {tag_name} does not exist.")
-                return False, None, False, False
+                return False, None, False
                 
         except Exception as e:
             print(f"Error checking GitHub release: {e}")
-            return False, None, False, False
+            return False, None, False
             
     def create_tarball(self, package_name: str, version: str, pex_path: Path, script_paths: List[Path]) -> Path:
         """Create a tarball containing the PEX file and binary scripts.
@@ -347,7 +343,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             print(f"Created tarball: {tarball_path}")
             return tarball_path
 
-    def create_github_release(self, package_name: str, version: str, pex_path: Path, script_paths: List[Path], use_prerelease: bool = True) -> Tuple[bool, Optional[object]]:
+    def create_github_release(self, package_name: str, version: str, pex_path: Path, script_paths: List[Path]) -> Tuple[bool, Optional[object]]:
         """Create a GitHub release and upload the tarball containing PEX file and binary scripts.
         
         Args:
@@ -355,7 +351,6 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             version: Version of the package
             pex_path: Path to the PEX file
             script_paths: List of paths to binary scripts
-            use_prerelease: Whether to use prerelease mode instead of draft mode
             
         Returns:
             Tuple of (success, release_object)
@@ -376,27 +371,16 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 release = repo.get_release(tag_name)
                 print(f"Found existing release: {release_name}")
             except GithubException:
-                # Create the release in draft or prerelease mode
-                if use_prerelease:
-                    print(f"Creating GitHub release: {release_name} (prerelease mode)")
-                    release_message = f"Release of {package_name} version {version}"
-                    release = repo.create_git_release(
-                        tag=tag_name,
-                        name=release_name,
-                        message=release_message,
-                        draft=False,
-                        prerelease=True  # Create in prerelease mode
-                    )
-                else:
-                    print(f"Creating GitHub release: {release_name} (draft mode)")
-                    release_message = f"Release of {package_name} version {version}"
-                    release = repo.create_git_release(
-                        tag=tag_name,
-                        name=release_name,
-                        message=release_message,
-                        draft=True,  # Create in draft mode
-                        prerelease=False
-                    )
+                # Create the release in prerelease mode
+                print(f"Creating GitHub release: {release_name} (prerelease mode)")
+                release_message = f"Release of {package_name} version {version}"
+                release = repo.create_git_release(
+                    tag=tag_name,
+                    name=release_name,
+                    message=release_message,
+                    draft=False,
+                    prerelease=True  # Create in prerelease mode
+                )
             
             # Create tarball containing PEX file and binary scripts
             tarball_path = self.create_tarball(package_name, version, pex_path, script_paths)
@@ -438,8 +422,8 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
         if not release:
             return False
             
-        # Skip if the release is neither draft nor prerelease
-        if not release.draft and not release.prerelease:
+        # Skip if the release is not in prerelease mode
+        if not release.prerelease:
             return False
             
         # Expected assets for all platforms
@@ -457,9 +441,8 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
         missing_assets = [asset for asset in expected_assets if asset not in assets]
         
         if missing_assets:
-            status = "draft" if release.draft else "prerelease"
             print(f"Release {release.tag_name} is missing assets: {missing_assets}")
-            print(f"Release will remain in {status} mode until all assets are uploaded.")
+            print(f"Release will remain in prerelease mode until all assets are uploaded.")
             return False
         
         # All assets are present, finalize the release
@@ -467,7 +450,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
         release.update_release(
             name=release.title,
             message=release.body,
-            draft=False,  # Remove draft status
+            draft=False,
             prerelease=False  # Remove prerelease status
         )
         print(f"Release {release.tag_name} has been finalized: {release.html_url}")
@@ -517,10 +500,10 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
         for version, python_version in version_map.items():
             try:
                 # Check if GitHub release already exists
-                exists, release, is_draft, is_prerelease = self.check_github_release_exists(actual_package_name, version)
+                exists, release, is_prerelease = self.check_github_release_exists(actual_package_name, version)
                 
-                # Skip if release exists and is neither in draft nor prerelease mode
-                if exists and not is_draft and not is_prerelease:
+                # Skip if release exists and is not in prerelease mode
+                if exists and not is_prerelease:
                     print(f"Skipping {actual_package_name} {version} as GitHub release already exists and is published.")
                     continue
                 
@@ -533,8 +516,8 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 # Create binary scripts
                 script_paths = self.create_binary_scripts(pex_path, actual_package_name, binaries)
                 
-                # Create/update and upload GitHub release (using prerelease mode)
-                success, release = self.create_github_release(actual_package_name, version, pex_path, script_paths, use_prerelease=True)
+                # Create/update and upload GitHub release
+                success, release = self.create_github_release(actual_package_name, version, pex_path, script_paths)
                 
                 # Check if all platform assets are uploaded and finalize the release
                 if success and release:
