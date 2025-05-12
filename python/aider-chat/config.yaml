@@ -3,4 +3,4 @@ binaries:
 
 versions:
   - version: 0.83.1
-    python: 3.12
+    python: 3.10

@@ -182,7 +182,7 @@ class PexBuilder:
             "uv",
             "run",
             "--python",
-            python_version,
+            f"3.{python_version.split('.')[1]}",  # Convert 3.12 to just 3.12
             "--isolated",
             "--managed-python",
             "--from",
@@ -190,6 +190,9 @@ class PexBuilder:
             "pex",
             "-r", str(req_txt_file),
             "-o", str(pex_path),
+            "--python-shebang", f"/usr/bin/env python3.{python_version.split('.')[1]}",
+            "-c", package_name,  # Use package name as entry point
+            "--no-pypi"
         ]
             
         try:
