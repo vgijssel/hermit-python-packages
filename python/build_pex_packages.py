@@ -190,7 +190,7 @@ class PexBuilder:
         """
             
         pex_filename = f"{package_name}.pex"
-        pex_path = self.dist_dir / "python" / package_name / str(version) / pex_filename
+        pex_path = self.dist_dir / "python" / str(python_version) / package_name / str(version) / pex_filename
 
         # Skip if PEX file already exists
         if pex_path.exists():
@@ -281,13 +281,11 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             - release_object: The release object if it exists, None otherwise
             - is_draft: True if the release exists and is in draft mode, False otherwise
         """
-        if not self.github:
-            print("GitHub client not initialized. Skipping release check.")
-            return False, None, False
-            
         try:
             # Format the tag name as package-name-vX.Y.Z
             tag_name = f"{package_name}-v{version}"
+
+            import pdb; pdb.set_trace()
             
             # Get the repository
             repo = self.github.get_repo(self.github_repo)
@@ -368,7 +366,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             
             # Get the repository
             repo = self.github.get_repo(self.github_repo)
-            
+
             # Check if release already exists
             release = None
             try:
@@ -428,8 +426,8 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             
         # Expected assets for all platforms
         expected_assets = [
-            f"{package_name}-macos-arm64.tar.gz",
-            f"{package_name}-macos-amd64.tar.gz",
+            f"{package_name}-darwin-arm64.tar.gz",
+            f"{package_name}-darwin-amd64.tar.gz",
             f"{package_name}-linux-arm64.tar.gz",
             f"{package_name}-linux-amd64.tar.gz"
         ]
