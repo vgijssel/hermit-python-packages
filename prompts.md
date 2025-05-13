@@ -43,7 +43,7 @@ Ensure that the build_pex_packages.py script exits with a non-zero exit code if 
 
 ## Generate Hermit manifest
 
-Create hermit manifest based on all GitHub releases. For this query all GitHub releases. Skip all releases that are still a prerelease. Cross reference all config.yaml files and GitHub releases and create a single, only one, manifest for each package. This manifest is going to written in the root directory and will be named after the package. For example `aider-chat.hcl`. The manifest looks something like this:
+Create a separate script called `create_hermit_manifest.py` that generates the Hermit manifest based on all GitHub releases. For this query all GitHub releases. Skip all releases that are still a prerelease. Cross reference all config.yaml files and GitHub releases and create a single, only one, manifest for each package. This manifest is going to written in the root directory and will be named after the package. For example `aider-chat.hcl`. The manifest looks something like this:
 
 ```hcl
 description = "Python tool aider-chat packaged as PEX" # comes from the config.yaml file

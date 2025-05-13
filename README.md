@@ -38,3 +38,5 @@ Once the PEX files and bash scripts are ready they are uploaded to GitHub releas
 - [ ] Query the releases API once and paginate over all the results. Cross reference versions from pypi and versions releases on GitHub. Include only versions for processing that don't have a release or those that have a draft/prerelease release.
 - [ ] Ability to exclude certain packages which pex is complaining about?
 - [ ] Automatically install playwright inside Aider-Chat.
+- [ ] Ability to pass in list of config files to process. For example `python/aider-chat/config.yaml` and `python/ansible/config.yaml`. This will allow for multiple packages to be processed in one go.
+- [ ] Ability to overwrite / replace releases.

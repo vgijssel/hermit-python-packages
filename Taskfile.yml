@@ -20,3 +20,8 @@ tasks:
     desc: Finalize the PEX packages
     cmds:
       - pants run python:finalize_releases -- aider-chat
+
+  pex:manifest:
+    desc: Generate the Hermit manifest
+    cmds:
+      - pants run python:generate_hermit_manifests -- aider-chat
