@@ -15,3 +15,8 @@ tasks:
     desc: Run the PEX package builder
     cmds:
       - pants run python:build_pex_packages -- aider-chat
+
+  pex:finalize:
+    desc: Finalize the PEX packages
+    cmds:
+      - pants run python:finalize_releases -- aider-chat
