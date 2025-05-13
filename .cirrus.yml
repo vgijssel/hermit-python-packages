@@ -46,14 +46,12 @@ macos_arm64_task:
   environment:
     GITHUB_TOKEN: ENCRYPTED[!590524e454536ddfaa86e590caf07ac4d13018ad4c15cfc6795b203b4651d798683dfe230bc65389c750e1f75d1f3a32!]
   macos_instance:
-    image: ghcr.io/cirruslabs/macos-ventura-base:latest
+    image: ghcr.io/cirruslabs/macos-runner:sequoia
     cpu: 4
     memory: 8G
   setup_script:
     # Setup direnv
     - brew install direnv
-    - echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc
-    - source ~/.zshrc
     - direnv allow .
   build_script:
     - eval $(direnv exec / direnv export zsh)
