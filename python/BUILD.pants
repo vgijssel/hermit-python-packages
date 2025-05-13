@@ -7,3 +7,8 @@ python_sources(
     name="generate_hermit_manifests",
     sources=["generate_hermit_manifests.py"],
 )
+
+python_sources(
+    name="finalize_releases",
+    sources=["finalize_releases.py"],
+)

@@ -59,3 +59,21 @@ macos_arm64_task:
   build_script:
     - eval $(direnv exec / direnv export zsh)
     - task pex:build
+
+# Task to finalize releases after all builds are complete
+finalize_releases_task:
+  name: Finalize Releases
+  depends_on:
+    - Linux amd64 Build
+    - Linux arm64 Build
+    - macOS arm64 Build
+  container:
+    image: python:3.12-slim
+    cpu: 1
+    memory: 1G
+  environment:
+    GITHUB_TOKEN: ENCRYPTED[!590524e454536ddfaa86e590caf07ac4d13018ad4c15cfc6795b203b4651d798683dfe230bc65389c750e1f75d1f3a32!]
+  setup_script:
+    - pip install PyGithub pyyaml
+  finalize_script:
+    - python python/finalize_releases.py

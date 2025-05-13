@@ -409,53 +409,6 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             print(f"Error creating/updating GitHub release: {e}")
             return False, None
 
-    def check_and_finalize_release(self, release, package_name: str, version: str) -> bool:
-        """Check if all platform assets are uploaded and finalize the release if they are.
-        
-        Args:
-            release: GitHub release object
-            package_name: Name of the package
-            version: Version of the package
-            
-        Returns:
-            True if the release was finalized, False otherwise
-        """
-        if not release:
-            return False
-            
-        # Skip if the release is not in prerelease mode
-        if not release.prerelease:
-            return False
-            
-        # Expected assets for all platforms
-        expected_assets = [
-            f"{package_name}-darwin-arm64.tar.gz",
-            f"{package_name}-darwin-amd64.tar.gz",
-            f"{package_name}-linux-arm64.tar.gz",
-            f"{package_name}-linux-amd64.tar.gz"
-        ]
-        
-        # Get all assets
-        assets = [asset.name for asset in release.get_assets()]
-        
-        # Check if all expected assets are present
-        missing_assets = [asset for asset in expected_assets if asset not in assets]
-        
-        if missing_assets:
-            print(f"Release {release.tag_name} is missing assets: {missing_assets}")
-            print(f"Release will remain in prerelease mode until all assets are uploaded.")
-            return False
-        
-        # All assets are present, finalize the release
-        print(f"All platform assets are present for {release.tag_name}, finalizing release.")
-        release.update_release(
-            name=release.title,
-            message=release.body,
-            draft=False,
-            prerelease=False  # Remove prerelease status
-        )
-        print(f"Release {release.tag_name} has been finalized: {release.html_url}")
-        return True
         
     def process_package(self, package_name: str) -> bool:
         """Process a package: build PEX files and update Hermit manifest.
@@ -530,9 +483,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                     # Create/update and upload GitHub release
                     success, release = self.create_github_release(actual_package_name, version, pex_path, script_paths)
                     
-                    # Check if all platform assets are uploaded and finalize the release
-                    if success and release:
-                        self.check_and_finalize_release(release, actual_package_name, version)
+                    # Release will be finalized by a separate script
 
                 except Exception as e:
                     print(f"Error processing {actual_package_name} {version}: {e}")
