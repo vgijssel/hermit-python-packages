@@ -19,7 +19,7 @@ from github import Github, GithubException
 class HermitManifestGenerator:
     """Generate Hermit manifests based on GitHub releases and config.yaml files."""
 
-    def __init__(self, package_dir: str, github_repo: str, github_token: Optional[str] = None):
+    def __init__(self, package_dir: Path, github_repo: str, github_token: Optional[str] = None):
         """Initialize the Hermit manifest generator.
 
         Args:
@@ -27,7 +27,7 @@ class HermitManifestGenerator:
             github_repo: GitHub repository name (owner/repo)
             github_token: GitHub token for authentication
         """
-        self.package_dir = Path(package_dir)
+        self.package_dir = package_dir
         self.github_repo = github_repo
         self.github_token = github_token or os.environ.get("GITHUB_TOKEN")
         
@@ -245,30 +245,26 @@ class HermitManifestGenerator:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Generate Hermit manifests")
-    parser.add_argument("--package", help="Package name (if not specified, generate for all packages)")
-    parser.add_argument("--package-dir", default="python", help="Directory containing package configurations")
+    parser.add_argument("package", help="Package directory name (under python/)")
     parser.add_argument("--github-token", help="GitHub token for authentication")
     parser.add_argument("--github-repo", default="vgijssel/hermit-python-packages",
                         help="GitHub repository name (owner/repo)")
     
     args = parser.parse_args()
     
-    package_dir = Path(args.package_dir)
+    package_dir = Path("python")
     if not package_dir.exists():
         print(f"Error: Package directory not found: {package_dir}")
         sys.exit(1)
     
     try:
         generator = HermitManifestGenerator(
-            package_dir=args.package_dir,
+            package_dir=package_dir,
             github_token=args.github_token,
             github_repo=args.github_repo
         )
         
-        if args.package:
-            success = generator.generate_manifest(args.package)
-        else:
-            success = generator.generate_all_manifests()
+        success = generator.generate_manifest(args.package)
             
         if not success:
             print("Error: Failed to generate one or more manifests")
