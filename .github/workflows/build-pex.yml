@@ -9,6 +9,8 @@ jobs:
   build:
     name: Build PEX packages
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write  # Required for creating GitHub releases
     strategy:
       matrix:
         os: 
@@ -20,12 +22,19 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        
+      - name: Setup environment variables
+        run: |
+          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .env
+          
       - uses: HatsuneMiku3939/direnv-action@v1
         with:
           direnvVersion: 2.32.1
+          
       - uses: cashapp/activate-hermit@v1
 
-      # TODO: setup github environment variables
       - name: Build PEX packages
         run: |
           task pex:build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
