@@ -204,14 +204,6 @@ def main():
     
     args = parser.parse_args()
     
-    # Print environment variables (without values) to debug
-    print("Environment variables:")
-    for key in sorted(os.environ.keys()):
-        if "TOKEN" in key or "SECRET" in key or "KEY" in key:
-            print(f"  {key}: <redacted>")
-        elif key.startswith("GITHUB_"):
-            print(f"  {key}: <redacted>" if "TOKEN" in key else f"  {key}: {os.environ[key]}")
-    
     package_dir = Path("python")
     if not package_dir.exists():
         print(f"Error: Package directory not found: {package_dir}")
