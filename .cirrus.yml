@@ -3,8 +3,8 @@ linux_amd64_task:
   name: Linux amd64 Build
   container:
     image: ubuntu:24.04
-    cpu: 4
-    memory: 8G
+    cpu: 2
+    memory: 4G
   setup_script:
     - apt-get update
     - apt-get install -y curl git build-essential
@@ -14,6 +14,7 @@ linux_amd64_task:
     - source ~/.bashrc
     - direnv allow .
   build_script:
+    - eval $(direnv exec / direnv export bash)
     - task pex:build
 
 # Task for Linux arm64 builds
@@ -21,8 +22,8 @@ linux_arm64_task:
   name: Linux arm64 Build
   arm_container:
     image: ubuntu:24.04
-    cpu: 4
-    memory: 8G
+    cpu: 2
+    memory: 4G
   setup_script:
     - apt-get update
     - apt-get install -y curl git build-essential
@@ -32,4 +33,5 @@ linux_arm64_task:
     - source ~/.bashrc
     - direnv allow .
   build_script:
+    - eval $(direnv exec / direnv export bash)
     - task pex:build
