@@ -9,10 +9,7 @@ darwin {
 }
 
 version "0.83.1" {
-  auto-version {
-    github-release = "vgijssel/hermit-python-packages"
-    version-pattern = "aider-chat-v(.*)"
-  }
+  runtime-dependencies = ["python3@3.10"]
 }
 
 sha256sums = {

@@ -5,23 +5,24 @@ on:
     branches:
       - main
 
-# Cancel in-progress runs of this workflow when a new one is triggered
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   build:
     name: Build PEX packages
     runs-on: ${{ matrix.os }}
+    # Cancel in-progress runs of this workflow when a new one is triggered
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
     permissions:
       contents: write  # Required for creating GitHub releases
     # https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
     strategy:
       matrix:
         os: 
-          - ubuntu-22.04, # amd64
-          - ubuntu-22.04-arm64 # arm64
+          - ubuntu-24.04, # amd64
+          - ubuntu-24.04-arm64 # arm64
           - macos-13 # amd64
           - macos-15 # arm64
 

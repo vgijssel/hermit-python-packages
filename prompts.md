@@ -43,6 +43,29 @@ Ensure that the build_pex_packages.py script exits with a non-zero exit code if 
 
 ## Generate Hermit manifest
 
-It's possible that the script creates requirement files and hermit manifest files. Make sure that these changes are committed and pushed to the repository.
+Create hermit manifest based on all GitHub releases. For this query all GitHub releases. Skip all releases that are still a prerelease. Cross reference all config.yaml files and GitHub releases and create a single, only one, manifest for each package. This manifest is going to written in the root directory and will be named after the package. For example `aider-chat.hcl`. The manifest looks something like this:
 
-Add the digests to the manifest file. 
+```hcl
+description = "Python tool aider-chat packaged as PEX" # comes from the config.yaml file
+binaries = ["aider"] # binaries come from the config.yaml file
+test = "aider --help" # test command comes from the config.yaml file
+repository = "https://github.com/vgijssel/hermit-python-packages" # comes from the config.yaml file
+
+# The source is the URL to the tarball archive
+source = "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v${version}/aider-chat-${os}-${arch}.tar.gz"
+
+# Each individual version is listed here
+version "0.83.1" {
+
+  # The necessary python version is listed here based on the config.yaml file
+  runtime-dependencies = ["python3@3.10"]
+}
+
+# The sha256 digest of the tarball archive is listed here
+sha256sums = {
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v0.83.1/aider-chat-darwin-arm64.tar.gz": "19c37932226e469e01ebdf1e9494ba41e1da9ce48f3f07f40a13ecc491321174",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v0.83.1/aider-chat-darwin-amd64.tar.gz": "e92e585f2c587b7c6f28984b52ada93aebac8439e8cb4d100eedf947a90147c8",
+}
+```
+
+This means that each GitHub release also needs to contain the sha256 digest of the tarball archive. The sha256 digest is calculated based on the tarball archive. The sha256 digest is used to verify the integrity of the tarball archive.

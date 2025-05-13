@@ -37,3 +37,4 @@ Once the PEX files and bash scripts are ready they are uploaded to GitHub releas
 - [ ] Ensure Python 3.10 inside the yaml config is not a number but a string
 - [ ] Query the releases API once and paginate over all the results. Cross reference versions from pypi and versions releases on GitHub. Include only versions for processing that don't have a release or those that have a draft/prerelease release.
 - [ ] Ability to exclude certain packages which pex is complaining about?
+- [ ] Automatically install playwright inside Aider-Chat.
