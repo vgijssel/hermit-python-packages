@@ -35,4 +35,8 @@ Create a release in "prerelease" mode. While the release is in prerelease mode, 
 
 ##  GitHub Actions
 
-Create a GitHub action that runs on push to the main branch. The action should use the `actions/checkout` action to check out the code. The action should use Hermit to install all necessary dependencies. The action should setup direnv to make sure the environment is the same. The action should run `task pex:build` which will create the necessary releases. Create a job for macOS arm64 and amd64 and linux arm64 and amd64.
+Create a GitHub action that runs on push to the main branch. The action should use the `actions/checkout` action to check out the code. The action should use Hermit to install all necessary dependencies. The action should setup direnv to make sure the environment is the same. The action should run `task pex:build` which will create the necessary releases. Create a job for macOS arm64 and amd64 and linux arm64 and amd64. 
+
+## Exit code
+
+Ensure that the build_pex_packages.py script exits with a non-zero exit code if any of the steps fail. This includes checking for the existence of the config.yaml file, creating the pex exectuable, checking for the existence of the GitHub API token. If any of these steps fail, the script should be marked as a failure but should continue processing until all versions have been processed. Missing GitHub API token should be a hard failure. If that misses the script should exit immediately with a non-zero exit code.
