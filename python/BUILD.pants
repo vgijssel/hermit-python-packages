@@ -2,3 +2,8 @@ python_sources(
     name="build_pex_packages",
     sources=["build_pex_packages.py"],
 )
+
+python_sources(
+    name="generate_hermit_manifests",
+    sources=["generate_hermit_manifests.py"],
+)
