@@ -1,26 +1,3 @@
-container:
-  image: node:latest
-
-check_task:
-  node_modules_cache:
-    folder: node_modules
-    fingerprint_script: cat yarn.lock
-    populate_script: yarn install
-  test_script: yarn test
-
-# arm_container:
-#   image: node:latest
-
-# check_task:
-#   node_modules_cache:
-#     folder: node_modules
-#     fingerprint_script: cat yarn.lock
-#     populate_script: yarn install
-#   test_script: yarn test# CirrusCI configuration for building Linux packages
-
-env:
-  GITHUB_TOKEN: ENCRYPTED[!0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef!]
-
 # Task for Linux amd64 builds
 linux_amd64_task:
   name: Linux amd64 Build
@@ -37,9 +14,6 @@ linux_amd64_task:
     - source ~/.bashrc
     - direnv allow .
   build_script:
-    # Use the hermit script directly
-    - ./bin/hermit install
-    - eval "$(./bin/hermit env)"
     - task pex:build
 
 # Task for Linux arm64 builds
@@ -58,7 +32,4 @@ linux_arm64_task:
     - source ~/.bashrc
     - direnv allow .
   build_script:
-    # Use the hermit script directly
-    - ./bin/hermit install
-    - eval "$(./bin/hermit env)"
     - task pex:build
