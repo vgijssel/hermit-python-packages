@@ -69,3 +69,7 @@ sha256sums = {
 ```
 
 This means that each GitHub release also needs to contain the sha256 digest of the tarball archive. The sha256 digest is calculated based on the tarball archive. The sha256 digest is used to verify the integrity of the tarball archive.
+
+## Use CirrusCI for Linux jobs
+
+Create a CirrusCI configuration file that runs the Linux jobs. The CirrusCI configuration file should be named `.cirrus.yml` and should be placed in the root directory. https://cirrus-ci.org/guide/writing-tasks/ contains instructions for writing tasks. The configuration should have two tasks: one for Linux arm64 and one for Linux amd64. The configuration should install direnv and hermit and run the `task pex:build` command. 
