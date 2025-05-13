@@ -1,6 +1,7 @@
 # Task for Linux amd64 builds
 linux_amd64_task:
   name: Linux amd64 Build
+  auto_cancellation: true
   environment:
     GITHUB_TOKEN: ENCRYPTED[!590524e454536ddfaa86e590caf07ac4d13018ad4c15cfc6795b203b4651d798683dfe230bc65389c750e1f75d1f3a32!]
   container:
@@ -22,6 +23,7 @@ linux_amd64_task:
 # Task for Linux arm64 builds
 linux_arm64_task:
   name: Linux arm64 Build
+  auto_cancellation: true
   environment:
     GITHUB_TOKEN: ENCRYPTED[!590524e454536ddfaa86e590caf07ac4d13018ad4c15cfc6795b203b4651d798683dfe230bc65389c750e1f75d1f3a32!]
   arm_container:
@@ -43,6 +45,7 @@ linux_arm64_task:
 # Task for macOS arm64 builds
 macos_arm64_task:
   name: macOS arm64 Build
+  auto_cancellation: true
   environment:
     GITHUB_TOKEN: ENCRYPTED[!590524e454536ddfaa86e590caf07ac4d13018ad4c15cfc6795b203b4651d798683dfe230bc65389c750e1f75d1f3a32!]
   macos_instance:
