@@ -30,11 +30,10 @@ jobs:
       - uses: HatsuneMiku3939/direnv-action@v1
         with:
           direnvVersion: 2.32.1
+          masks: GITHUB_TOKEN
           
       - uses: cashapp/activate-hermit@v1
 
       - name: Build PEX packages
         run: |
           task pex:build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
