@@ -124,8 +124,7 @@ class ReleaseManager:
         # Expected assets for required platforms
         expected_assets = [
             f"{package_name}-darwin-arm64.tar.gz",
-            # macOS amd64 is not required
-            # f"{package_name}-darwin-amd64.tar.gz",
+            f"{package_name}-darwin-amd64.tar.gz",
             f"{package_name}-linux-arm64.tar.gz",
             f"{package_name}-linux-amd64.tar.gz"
         ]
