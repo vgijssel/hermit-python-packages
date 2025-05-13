@@ -177,8 +177,18 @@ class ReleaseManager:
         """
         success = True
         
-        # Get all prerelease releases
+        # Get all releases
+        all_releases = list(self.repo.get_releases())
+        print(f"Total releases found: {len(all_releases)}")
+        
+        # Get prerelease releases
         prerelease_releases = self.get_prerelease_releases(package_name)
+        
+        # Count regular (non-prerelease) releases for this package
+        regular_releases = [r for r in all_releases if not r.prerelease and 
+                           (not package_name or r.tag_name.startswith(f"{package_name}-v"))]
+        
+        print(f"Regular releases found{' for ' + package_name if package_name else ''}: {len(regular_releases)}")
         
         if not prerelease_releases:
             print(f"No prerelease releases found{' for ' + package_name if package_name else ''}.")
