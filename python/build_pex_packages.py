@@ -308,12 +308,11 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             print(f"Error checking GitHub release: {e}")
             return False, None, False
             
-    def create_tarball(self, package_name: str, version: str, pex_path: Path, script_paths: List[Path]) -> Path:
+    def create_tarball(self, package_name: str, pex_path: Path, script_paths: List[Path]) -> Path:
         """Create a tarball containing the PEX file and binary scripts.
         
         Args:
             package_name: Name of the package
-            version: Version of the package
             pex_path: Path to the PEX file
             script_paths: List of paths to binary scripts
             
@@ -322,7 +321,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
         """
         # Create tarball filename with OS and architecture
         tarball_filename = f"{package_name}-{self.os_name}-{self.arch_name}.tar.gz"
-        tarball_path = self.dist_dir / "python" / package_name / str(version) / tarball_filename
+        tarball_path = pex_path.parent / tarball_filename
         
         # Create a temporary directory to stage files
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -383,10 +382,8 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 )
             
             # Create tarball containing PEX file and binary scripts
-            tarball_path = self.create_tarball(package_name, version, pex_path, script_paths)
-            
-            # Upload the tarball
-            asset_name = f"{package_name}-{self.os_name}-{self.arch_name}.tar.gz"
+            tarball_path = self.create_tarball(package_name, pex_path, script_paths)
+            asset_name = tarball_path.name
             
             # Check if asset already exists
             for asset in release.get_assets():
