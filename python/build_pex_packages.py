@@ -392,8 +392,8 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             # Check if asset already exists
             for asset in release.get_assets():
                 if asset.name == asset_name:
-                    print(f"Asset {asset_name} already exists, deleting it")
-                    asset.delete_asset()
+                    print(f"Asset {asset_name} already exists, skipping it")
+                    return True, release
             
             print(f"Uploading tarball: {tarball_path}")
             release.upload_asset(

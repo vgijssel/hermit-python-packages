@@ -40,3 +40,9 @@ Create a GitHub action that runs on push to the main branch. The action should u
 ## Exit code
 
 Ensure that the build_pex_packages.py script exits with a non-zero exit code if any of the steps fail. This includes checking for the existence of the config.yaml file, creating the pex exectuable, checking for the existence of the GitHub API token. If any of these steps fail, the script should be marked as a failure but should continue processing until all versions have been processed. Missing GitHub API token should be a hard failure. If that misses the script should exit immediately with a non-zero exit code.
+
+## Generate Hermit manifest
+
+It's possible that the script creates requirement files and hermit manifest files. Make sure that these changes are committed and pushed to the repository.
+
+Add the digests to the manifest file. 

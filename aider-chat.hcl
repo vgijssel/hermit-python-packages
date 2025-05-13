@@ -1,6 +1,7 @@
 description = "Python tool aider-chat packaged as PEX"
 binaries = ["aider"]
 test = "aider --help"
+runtime-dependencies = ["python3@3.10"]
 repository = "https://github.com/vgijssel/hermit-python-packages"
 
 darwin {
@@ -8,7 +9,10 @@ darwin {
 }
 
 version "0.83.1" {
-  runtime-dependencies = ["python3@3.10"]
+  auto-version {
+    github-release = "vgijssel/hermit-python-packages"
+    version-pattern = "aider-chat-v(.*)"
+  }
 }
 
 sha256sums = {
