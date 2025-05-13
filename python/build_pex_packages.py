@@ -19,8 +19,6 @@ import shutil
 import requests
 import semver
 import yaml
-import venv
-import shutil
 from github import Github, GithubException
 
 
