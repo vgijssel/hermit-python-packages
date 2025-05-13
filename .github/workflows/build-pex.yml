@@ -1,0 +1,42 @@
+name: Build PEX Packages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build PEX packages
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: darwin
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Hermit
+        run: |
+          ./bin/hermit env -r >> $GITHUB_ENV
+          echo "$(pwd)/bin" >> $GITHUB_PATH
+
+      - name: Set up direnv
+        run: |
+          eval "$(hermit env)"
+          direnv allow .
+
+      - name: Set up GitHub token
+        run: |
+          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Build PEX packages
+        run: |
+          eval "$(hermit env)"
+          task pex:build
