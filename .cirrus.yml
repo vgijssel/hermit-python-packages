@@ -79,5 +79,5 @@ finalize_releases_task:
     - apt-get install -y curl git build-essential python3 python3-pip
     - pip3 install PyGithub pyyaml
   finalize_script:
-    # Get the package name from the environment variable set in the build task
-    - python3 python/finalize_releases.py aider-chat
+    - echo "Using GitHub token with length: ${#GITHUB_TOKEN}"
+    - python3 python/finalize_releases.py aider-chat --github-token "$GITHUB_TOKEN"

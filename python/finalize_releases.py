@@ -26,16 +26,30 @@ class ReleaseManager:
         """
         self.package_dir = Path(package_dir)
         self.github_repo = github_repo
-        self.github_token = github_token or os.environ.get("GITHUB_TOKEN")
         
-        # Hard failure if GitHub token is missing
+        # Try to get GitHub token from multiple sources
+        self.github_token = github_token
         if not self.github_token:
+            self.github_token = os.environ.get("GITHUB_TOKEN")
+        
+        # Print debug info about token (without revealing it)
+        if self.github_token:
+            print(f"GitHub token found with length: {len(self.github_token)}")
+        else:
             print("Error: GITHUB_TOKEN not set. GitHub API operations will fail.")
             sys.exit(1)
         
         # Initialize GitHub client
-        self.github = Github(self.github_token)
-        self.repo = self.github.get_repo(self.github_repo)
+        try:
+            self.github = Github(self.github_token)
+            # Test the connection
+            user = self.github.get_user()
+            print(f"Authenticated as: {user.login}")
+            self.repo = self.github.get_repo(self.github_repo)
+            print(f"Connected to repository: {self.github_repo}")
+        except Exception as e:
+            print(f"Error connecting to GitHub: {e}")
+            sys.exit(1)
 
     def load_config(self, package_name: str) -> Dict:
         """Load the package configuration from config.yaml.
@@ -190,15 +204,28 @@ def main():
     
     args = parser.parse_args()
     
+    # Print environment variables (without values) to debug
+    print("Environment variables:")
+    for key in sorted(os.environ.keys()):
+        if "TOKEN" in key or "SECRET" in key or "KEY" in key:
+            print(f"  {key}: <redacted>")
+        elif key.startswith("GITHUB_"):
+            print(f"  {key}: <redacted>" if "TOKEN" in key else f"  {key}: {os.environ[key]}")
+    
     package_dir = Path("python")
     if not package_dir.exists():
         print(f"Error: Package directory not found: {package_dir}")
         sys.exit(1)
     
     try:
+        # Try to get token from environment first
+        github_token = args.github_token or os.environ.get("GITHUB_TOKEN")
+        if not github_token:
+            print("Warning: No GitHub token provided via --github-token or GITHUB_TOKEN environment variable")
+        
         manager = ReleaseManager(
             package_dir=package_dir,
-            github_token=args.github_token,
+            github_token=github_token,
             github_repo=args.github_repo
         )
         
