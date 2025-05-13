@@ -44,3 +44,30 @@ jobs:
       - name: Build PEX packages
         run: |
           task pex:build
+
+  finalize:
+    name: Finalize PEX packages
+    needs: build
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write  # Required for finalizing GitHub releases
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup environment variables
+        run: |
+          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .env
+          
+      - uses: HatsuneMiku3939/direnv-action@v1
+        with:
+          direnvVersion: 2.32.1
+          masks: GITHUB_TOKEN
+          
+      - uses: cashapp/activate-hermit@v1
+
+      - name: Finalize PEX packages
+        run: |
+          task pex:finalize
