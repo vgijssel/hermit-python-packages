@@ -11,32 +11,21 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        include:
-          - os: ubuntu-latest
-            platform: linux
-          - os: macos-latest
-            platform: darwin
+        os: 
+          - ubuntu-24.04, # amd64
+          - ubuntu-24.04-arm64 # arm64
+          - macos-13 # amd64
+          - macos-15 # arm64
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - uses: HatsuneMiku3939/direnv-action@v1
+        with:
+          direnvVersion: 2.32.1
+      - uses: cashapp/activate-hermit@v1
 
-      - name: Set up Hermit
-        run: |
-          ./bin/hermit env -r >> $GITHUB_ENV
-          echo "$(pwd)/bin" >> $GITHUB_PATH
-
-      - name: Set up direnv
-        run: |
-          eval "$(hermit env)"
-          direnv allow .
-
-      - name: Set up GitHub token
-        run: |
-          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
-
+      # TODO: setup github environment variables
       - name: Build PEX packages
         run: |
-          eval "$(hermit env)"
           task pex:build

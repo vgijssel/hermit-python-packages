@@ -32,3 +32,7 @@ Create a tarball of the pex and bash files for each version. The tarball should 
 ## Pre-Release
 
 Create a release in "prerelease" mode. While the release is in prerelease mode, assets can be uploaded (again) to the release. If a release is in prerelease mode it will not be skipped by the pex builder. Only after all macOS arm64 / amd64 assets and linux arm64 / amd64 assets have been uploaded the prerelease mode is removed.
+
+##  GitHub Actions
+
+Create a GitHub action that runs on push to the main branch. The action should use the `actions/checkout` action to check out the code. The action should use Hermit to install all necessary dependencies. The action should setup direnv to make sure the environment is the same. The action should run `task pex:build` which will create the necessary releases. Create a job for macOS arm64 and amd64 and linux arm64 and amd64.

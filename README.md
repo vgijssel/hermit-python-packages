@@ -36,3 +36,4 @@ Once the PEX files and bash scripts are ready they are uploaded to GitHub releas
 - [x] Create a release in "prerelease" mode. While the release is in prerelease mode, assets can be uploaded (again) to the release. After all macOS + Linux (arm64/amd64) assets have been uploaded the prerelease mode is removed.
 - [ ] Ensure Python 3.10 inside the yaml config is not a number but a string
 - [ ] Query the releases API once and paginate over all the results. Cross reference versions from pypi and versions releases on GitHub. Include only versions for processing that don't have a release or those that have a draft/prerelease release.
+- [ ] Ability to exclude certain packages which pex is complaining about?

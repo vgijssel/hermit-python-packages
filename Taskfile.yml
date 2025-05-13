@@ -14,4 +14,4 @@ tasks:
   pex:build:
     desc: Run the PEX package builder
     cmds:
-      - pants run python:build_pex_packages
+      - pants run python:build_pex_packages -- aider-chat
