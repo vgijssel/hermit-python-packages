@@ -6,8 +6,5 @@ binaries:
 
 versions:
   # Using Python 3.10 for compatibility with all dependencies
-  - version: 0.83.1
-    python: "3.10"
-  
   - version: 0.82.3
     python: "3.10"
