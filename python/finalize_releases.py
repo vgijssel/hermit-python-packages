@@ -184,22 +184,21 @@ class ReleaseManager:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Finalize GitHub releases")
-    parser.add_argument("--package", help="Package name (if not specified, check all packages)")
-    parser.add_argument("--package-dir", default="python", help="Directory containing package configurations")
+    parser.add_argument("package", help="Package directory name (under python/)")
     parser.add_argument("--github-token", help="GitHub token for authentication")
     parser.add_argument("--github-repo", default="vgijssel/hermit-python-packages",
                         help="GitHub repository name (owner/repo)")
     
     args = parser.parse_args()
     
-    package_dir = Path(args.package_dir)
+    package_dir = Path("python")
     if not package_dir.exists():
         print(f"Error: Package directory not found: {package_dir}")
         sys.exit(1)
     
     try:
         manager = ReleaseManager(
-            package_dir=args.package_dir,
+            package_dir=package_dir,
             github_token=args.github_token,
             github_repo=args.github_repo
         )
