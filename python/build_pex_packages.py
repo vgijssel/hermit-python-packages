@@ -43,8 +43,10 @@ class PexBuilder:
         self.github_token = github_token or os.environ.get("GITHUB_TOKEN")
         self.github_repo = github_repo
         
+        # Hard failure if GitHub token is missing
         if not self.github_token:
-            print("Warning: GITHUB_TOKEN not set. GitHub API operations will fail.")
+            print("Error: GITHUB_TOKEN not set. GitHub API operations will fail.")
+            sys.exit(1)
         
         # Create directories if they don't exist
         self.dist_dir.mkdir(parents=True, exist_ok=True)
@@ -80,7 +82,8 @@ class PexBuilder:
         """
         config_path = self.package_dir / package_name / "config.yaml"
         if not config_path.exists():
-            raise FileNotFoundError(f"Config file not found: {config_path}")
+            print(f"Error: Config file not found: {config_path}")
+            sys.exit(1)
         
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
@@ -167,7 +170,7 @@ class PexBuilder:
 
             print(f"Running command: {' '.join(cmd)}")
             subprocess.run(cmd, check=True, capture_output=True)
-            print(f"Successfully ceated lock file: {req_txt_file}")
+            print(f"Successfully created lock file: {req_txt_file}")
             return version_dir
 
         except subprocess.CalledProcessError as e:
@@ -175,7 +178,7 @@ class PexBuilder:
                 print(f"Failed to create lock file with uv: {e.stderr.decode()}")
             else:
                 print(f"Failed to create lock file with uv: {e}")
-            # raise
+            raise
     
     def build_pex(self, package_name: str, version: str, python_version: str) -> Path:
         """Build a PEX file for the specified package version.
@@ -202,6 +205,9 @@ class PexBuilder:
         # First create dependency files
         version_dir = self.create_dependency_files(package_name, version, python_version)
         req_txt_file = version_dir / "requirements.txt"
+
+        # Ensure the output directory exists
+        pex_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Run uv tool to create PEX file
         cmd = [
@@ -453,75 +459,92 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
         print(f"Release {release.tag_name} has been finalized: {release.html_url}")
         return True
         
-    def process_package(self, package_name: str) -> None:
+    def process_package(self, package_name: str) -> bool:
         """Process a package: build PEX files and update Hermit manifest.
         
         Args:
             package_name: Name of the package
+            
+        Returns:
+            bool: True if successful, False if any errors occurred
         """
-        config = self.load_config(package_name)
-        actual_package_name = config['package']
-        versions_config = config['versions']
-        binaries = config['binaries']
-        
-        if not versions_config:
-            raise ValueError(f"No versions specified for {package_name}")
-        
-        # Sort versions by semver and get the lowest version
-        sorted_versions = sorted(versions_config, key=lambda v: semver.VersionInfo.parse(v["version"]))
-        min_version = sorted_versions[0]["version"]
-        
-        # Get all versions from PyPI
-        all_versions = self.get_pypi_versions(actual_package_name, min_version)
-        print(f"Found {len(all_versions)} versions for {actual_package_name} >= {min_version}")
-
-        # Map Python versions to package versions
-        version_map = {}
-        for version_info in versions_config:
-            version = version_info["version"]
-            python_version = version_info["python"]
+        has_errors = False
+        try:
+            config = self.load_config(package_name)
+            actual_package_name = config['package']
+            versions_config = config.get('versions', [])
+            binaries = config.get('binaries', [])
             
-            # Find all versions >= this version but < next specified version
-            next_version = None
-            for v in versions_config:
-                if semver.compare(v["version"], version) > 0:
-                    if next_version is None or semver.compare(v["version"], next_version) < 0:
-                        next_version = v["version"]
+            if not versions_config:
+                print(f"Error: No versions specified for {package_name}")
+                return False
             
-            # Filter versions
-            for v in all_versions:
-                if semver.compare(v, version) >= 0 and (next_version is None or semver.compare(v, next_version) < 0):
-                    version_map[v] = python_version
+            if not binaries:
+                print(f"Error: No binaries specified for {package_name}")
+                return False
+            
+            # Sort versions by semver and get the lowest version
+            sorted_versions = sorted(versions_config, key=lambda v: semver.VersionInfo.parse(v["version"]))
+            min_version = sorted_versions[0]["version"]
+            
+            # Get all versions from PyPI
+            all_versions = self.get_pypi_versions(actual_package_name, min_version)
+            print(f"Found {len(all_versions)} versions for {actual_package_name} >= {min_version}")
 
-        # Build PEX files for each version
-        for version, python_version in version_map.items():
-            try:
-                # Check if GitHub release already exists
-                exists, release, is_prerelease = self.check_github_release_exists(actual_package_name, version)
+            # Map Python versions to package versions
+            version_map = {}
+            for version_info in versions_config:
+                version = version_info["version"]
+                python_version = version_info["python"]
                 
-                # Skip if release exists and is not in prerelease mode
-                if exists and not is_prerelease:
-                    print(f"Skipping {actual_package_name} {version} as GitHub release already exists and is published.")
-                    continue
+                # Find all versions >= this version but < next specified version
+                next_version = None
+                for v in versions_config:
+                    if semver.compare(v["version"], version) > 0:
+                        if next_version is None or semver.compare(v["version"], next_version) < 0:
+                            next_version = v["version"]
                 
-                # Create dependency files first
-                self.create_dependency_files(actual_package_name, version, python_version)
-                
-                # Build PEX file
-                pex_path = self.build_pex(actual_package_name, version, python_version)
-                
-                # Create binary scripts
-                script_paths = self.create_binary_scripts(pex_path, actual_package_name, binaries)
-                
-                # Create/update and upload GitHub release
-                success, release = self.create_github_release(actual_package_name, version, pex_path, script_paths)
-                
-                # Check if all platform assets are uploaded and finalize the release
-                if success and release:
-                    self.check_and_finalize_release(release, actual_package_name, version)
+                # Filter versions
+                for v in all_versions:
+                    if semver.compare(v, version) >= 0 and (next_version is None or semver.compare(v, next_version) < 0):
+                        version_map[v] = python_version
 
-            except Exception as e:
-                print(f"Error processing {actual_package_name} {version}: {e}")
+            # Build PEX files for each version
+            for version, python_version in version_map.items():
+                try:
+                    # Check if GitHub release already exists
+                    exists, release, is_prerelease = self.check_github_release_exists(actual_package_name, version)
+                    
+                    # Skip if release exists and is not in prerelease mode
+                    if exists and not is_prerelease:
+                        print(f"Skipping {actual_package_name} {version} as GitHub release already exists and is published.")
+                        continue
+                    
+                    # Create dependency files first
+                    self.create_dependency_files(actual_package_name, version, python_version)
+                    
+                    # Build PEX file
+                    pex_path = self.build_pex(actual_package_name, version, python_version)
+                    
+                    # Create binary scripts
+                    script_paths = self.create_binary_scripts(pex_path, actual_package_name, binaries)
+                    
+                    # Create/update and upload GitHub release
+                    success, release = self.create_github_release(actual_package_name, version, pex_path, script_paths)
+                    
+                    # Check if all platform assets are uploaded and finalize the release
+                    if success and release:
+                        self.check_and_finalize_release(release, actual_package_name, version)
+
+                except Exception as e:
+                    print(f"Error processing {actual_package_name} {version}: {e}")
+                    has_errors = True
+                    # Continue with next version
+            
+            return not has_errors
+        except Exception as e:
+            print(f"Error processing package {package_name}: {e}")
+            return False
 
 
 def main():
@@ -540,22 +563,25 @@ def main():
     
     package_dir = Path("python")
     if not package_dir.exists():
-        print(f"Package directory not found: {package_dir}")
+        print(f"Error: Package directory not found: {package_dir}")
         sys.exit(1)
     
-    builder = PexBuilder(
-        package_dir=package_dir,
-        dist_dir=args.dist_dir,
-        tmp_dir=args.tmp_dir,
-        github_token=args.github_token,
-        github_repo=args.github_repo
-    )
-    
-    # try:
-    builder.process_package(args.package)
-    # except Exception as e:
-    #     print(f"Error: {e}")
-    #     sys.exit(1)
+    try:
+        builder = PexBuilder(
+            package_dir=package_dir,
+            dist_dir=args.dist_dir,
+            tmp_dir=args.tmp_dir,
+            github_token=args.github_token,
+            github_repo=args.github_repo
+        )
+        
+        success = builder.process_package(args.package)
+        if not success:
+            print(f"Error: Failed to process package {args.package}")
+            sys.exit(1)
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
