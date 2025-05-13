@@ -21,7 +21,7 @@ jobs:
     strategy:
       matrix:
         os: 
-          - ubuntu-latest, # amd64
+          - ubuntu-latest # amd64
           - ubuntu-latest-arm64 # arm64
           - macos-13 # amd64
           - macos-15 # arm64
