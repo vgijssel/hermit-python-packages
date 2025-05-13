@@ -5,8 +5,8 @@ linux_amd64_task:
     GITHUB_TOKEN: ENCRYPTED[!590524e454536ddfaa86e590caf07ac4d13018ad4c15cfc6795b203b4651d798683dfe230bc65389c750e1f75d1f3a32!]
   container:
     image: ubuntu:24.04
-    cpu: 2
-    memory: 4G
+    cpu: 4
+    memory: 8G
   setup_script:
     - apt-get update
     - apt-get install -y curl git build-essential
@@ -26,8 +26,8 @@ linux_arm64_task:
     GITHUB_TOKEN: ENCRYPTED[!590524e454536ddfaa86e590caf07ac4d13018ad4c15cfc6795b203b4651d798683dfe230bc65389c750e1f75d1f3a32!]
   arm_container:
     image: ubuntu:24.04
-    cpu: 2
-    memory: 4G
+    cpu: 4
+    memory: 8G
   setup_script:
     - apt-get update
     - apt-get install -y curl git build-essential
