@@ -93,24 +93,6 @@ class ReleaseGenerator:
         
         self.logger.info(f"State saved to {state_path}")
 
-    def check_requirements_exist(self, package_name: str, version: str) -> bool:
-        """Check if requirements files exist for the given package and version.
-        
-        Args:
-            package_name: Name of the package
-            version: Version of the package
-            
-        Returns:
-            True if both requirements.in and requirements.txt exist, False otherwise
-        """
-        version_dir = self.package_dir / package_name / version
-        req_in_file = version_dir / "requirements.in"
-        req_txt_file = version_dir / "requirements.txt"
-        
-        exists = req_in_file.exists() and req_txt_file.exists()
-        self.logger.debug(f"Requirements files for {package_name} {version}: {exists}")
-        return exists
-
     def create_github_release(self, package_name: str, version: str) -> Tuple[bool, Optional[object]]:
         """Create a GitHub release for the given package and version.
         
@@ -126,29 +108,23 @@ class ReleaseGenerator:
         try:
             # Format the tag name and release name
             tag_name = f"{package_name}-v{version}"
-            release_name = f"{package_name} v{version}"
+            release_name = tag_name
             
             # Get the repository
             repo = self.github.get_repo(self.github_repo)
             
             # Check if release already exists
-            try:
-                release = repo.get_release(tag_name)
-                self.logger.info(f"Release {tag_name} already exists.")
-                return True, release
-            except GithubException:
-                # Create the release in prerelease mode
-                self.logger.info(f"Creating GitHub release: {release_name} (prerelease mode)")
-                release_message = f"Release of {package_name} version {version}"
-                release = repo.create_git_release(
-                    tag=tag_name,
-                    name=release_name,
-                    message=release_message,
-                    draft=False,
-                    prerelease=True  # Create in prerelease mode
-                )
-                self.logger.info(f"Successfully created release: {tag_name}")
-                return True, release
+            self.logger.info(f"Creating GitHub release: {release_name} (prerelease mode)")
+            release_message = f"Release of {package_name} version {version}"
+            release = repo.create_git_release(
+                tag=tag_name,
+                name=release_name,
+                message=release_message,
+                draft=False,
+                prerelease=True  # Create in prerelease mode
+            )
+            self.logger.info(f"Successfully created release: {tag_name}")
+            return True, release
                 
         except Exception as e:
             self.logger.error(f"Error creating GitHub release: {e}", exc_info=True)
@@ -178,18 +154,13 @@ class ReleaseGenerator:
             has_changes = False
             for version_info in versions:
                 version = version_info['version']
-                has_requirements = version_info.get('requirements', False)
-                has_release = version_info.get('release', False)
+                has_requirements = version_info['requirements']
+                has_release = version_info['release']
                 
                 self.logger.debug(f"Processing {actual_package_name} {version}: requirements={has_requirements}, release={has_release}")
                 
                 # Only create releases for versions with requirements but no release
                 if has_requirements and not has_release:
-                    # Double-check that requirements files actually exist
-                    if not self.check_requirements_exist(package_name, version):
-                        self.logger.warning(f"Requirements files not found for {actual_package_name} {version}")
-                        continue
-                    
                     self.logger.info(f"Creating release for {actual_package_name} {version}")
                     success, _ = self.create_github_release(actual_package_name, version)
                     if success:
