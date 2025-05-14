@@ -7,6 +7,7 @@ import argparse
 import os
 import sys
 import hashlib
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 import yaml
@@ -29,14 +30,16 @@ class StateGenerator:
         self.package_dir = Path(package_dir)
         self.github_repo = github_repo
         self.github_token = github_token or os.environ.get("GITHUB_TOKEN")
+        self.logger = logging.getLogger('state_generator')
         
         # Hard failure if GitHub token is missing
         if not self.github_token:
-            print("Error: GITHUB_TOKEN not set. GitHub API operations will fail.")
+            self.logger.error("GITHUB_TOKEN not set. GitHub API operations will fail.")
             sys.exit(1)
         
         # Initialize GitHub client
         self.github = Github(self.github_token)
+        self.logger.info(f"StateGenerator initialized for repo: {github_repo}")
 
     def load_config(self, package_name: str) -> Dict:
         """Load the package configuration from config.yaml.
@@ -204,7 +207,7 @@ class StateGenerator:
         
         # Get all versions from PyPI
         all_versions = self.get_pypi_versions(actual_package_name, min_version)
-        print(f"Found {len(all_versions)} versions for {actual_package_name} >= {min_version}")
+        self.logger.info(f"Found {len(all_versions)} versions for {actual_package_name} >= {min_version}")
 
         # Map Python versions to package versions
         version_map = {}
@@ -227,11 +230,15 @@ class StateGenerator:
         # Generate state for each version
         state = {"versions": []}
         for version, python_version in version_map.items():
+            self.logger.info(f"Processing {actual_package_name} version {version} with Python {python_version}")
+            
             # Check if requirements files exist
             has_requirements = self.check_requirements_exist(package_name, version)
+            self.logger.debug(f"{actual_package_name} v{version}: requirements exist = {has_requirements}")
             
             # Check if GitHub release exists
             release_info = self.check_github_release(actual_package_name, version)
+            self.logger.debug(f"{actual_package_name} v{version}: release exists = {release_info['exists']}")
             
             # Add to state
             state["versions"].append({
@@ -255,7 +262,7 @@ class StateGenerator:
         with open(state_path, "w") as f:
             yaml.dump(state, f, default_flow_style=False)
         
-        print(f"State saved to {state_path}")
+        self.logger.info(f"State saved to {state_path}")
 
     def process_package(self, package_name: str) -> bool:
         """Process a package: generate and save state.
@@ -267,11 +274,13 @@ class StateGenerator:
             bool: True if successful, False if any errors occurred
         """
         try:
+            self.logger.info(f"Starting to process package: {package_name}")
             state = self.generate_state(package_name)
             self.save_state(package_name, state)
+            self.logger.info(f"Successfully processed package: {package_name}")
             return True
         except Exception as e:
-            print(f"Error processing package {package_name}: {e}")
+            self.logger.error(f"Error processing package {package_name}: {e}", exc_info=True)
             return False
 
 
@@ -282,8 +291,19 @@ def main():
     parser.add_argument("--github-token", help="GitHub token for authentication")
     parser.add_argument("--github-repo", default="vgijssel/hermit-python-packages",
                         help="GitHub repository name (owner/repo)")
+    parser.add_argument("--log-level", default="INFO", 
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        help="Set the logging level")
     
     args = parser.parse_args()
+    
+    # Configure logging
+    logging.basicConfig(
+        level=getattr(logging, args.log_level),
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    logger = logging.getLogger('state_generator')
     
     package_dir = Path("python")
     if not package_dir.exists():
@@ -299,15 +319,15 @@ def main():
         
         success = True
         for package in args.package:
-            print(f"Processing package: {package}")
+            logger.info(f"Processing package: {package}")
             if not generator.process_package(package):
-                print(f"Error: Failed to process package {package}")
+                logger.error(f"Failed to process package {package}")
                 success = False
         
         if not success:
             sys.exit(1)
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}", exc_info=True)
         sys.exit(1)
 
 
