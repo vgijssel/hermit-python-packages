@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import shutil
@@ -36,10 +37,11 @@ class PexGenerator:
         self.tmp_dir = Path(tmp_dir)
         self.github_repo = github_repo
         self.github_token = github_token or os.environ.get("GITHUB_TOKEN")
+        self.logger = logging.getLogger('pex_generator')
         
         # Hard failure if GitHub token is missing
         if not self.github_token:
-            print("Error: GITHUB_TOKEN not set. GitHub API operations will fail.")
+            self.logger.error("GITHUB_TOKEN not set. GitHub API operations will fail.")
             sys.exit(1)
         
         # Create directories if they don't exist
@@ -58,9 +60,11 @@ class PexGenerator:
             arch_name = "arm64"
 
         self.arch_name = arch_name
+        self.logger.info(f"Platform detected: {self.os_name}-{self.arch_name}")
         
         # Initialize GitHub client
         self.github = Github(self.github_token)
+        self.logger.info(f"PexGenerator initialized for repo: {github_repo}")
 
     def load_config(self, package_name: str) -> Dict:
         """Load the package configuration from config.yaml.
@@ -73,7 +77,7 @@ class PexGenerator:
         """
         config_path = self.package_dir / package_name / "config.yaml"
         if not config_path.exists():
-            print(f"Error: Config file not found: {config_path}")
+            self.logger.error(f"Config file not found: {config_path}")
             sys.exit(1)
         
         with open(config_path, "r") as f:
@@ -96,7 +100,7 @@ class PexGenerator:
         """
         state_path = self.package_dir / package_name / "state.yaml"
         if not state_path.exists():
-            print(f"Error: State file not found: {state_path}")
+            self.logger.error(f"State file not found: {state_path}")
             sys.exit(1)
         
         with open(state_path, "r") as f:
@@ -115,7 +119,7 @@ class PexGenerator:
         with open(state_path, "w") as f:
             yaml.dump(state, f, default_flow_style=False)
         
-        print(f"State saved to {state_path}")
+        self.logger.info(f"State saved to {state_path}")
 
     def build_pex(self, package_name: str, version: str, python_version: str) -> Path:
         """Build a PEX file for the specified package version.
@@ -133,17 +137,17 @@ class PexGenerator:
 
         # Skip if PEX file already exists
         if pex_path.exists():
-            print(f"PEX file already exists: {pex_path}")
+            self.logger.info(f"PEX file already exists: {pex_path}")
             return pex_path
         
-        print(f"Building PEX for {package_name}=={version} with Python {python_version}")
+        self.logger.info(f"Building PEX for {package_name}=={version} with Python {python_version}")
         
         # Check if requirements files exist
         version_dir = self.package_dir / package_name / version
         req_txt_file = version_dir / "requirements.txt"
         
         if not req_txt_file.exists():
-            print(f"Error: Requirements file not found: {req_txt_file}")
+            self.logger.error(f"Requirements file not found: {req_txt_file}")
             sys.exit(1)
 
         # Ensure the output directory exists
@@ -166,15 +170,15 @@ class PexGenerator:
         ]
             
         try:
-            print(f"Running command: {' '.join(cmd)}")
+            self.logger.debug(f"Running command: {' '.join(cmd)}")
             subprocess.run(cmd, check=True, capture_output=True)
-            print(f"Successfully built PEX: {pex_path}")
+            self.logger.info(f"Successfully built PEX: {pex_path}")
             return pex_path
         except subprocess.CalledProcessError as e:
             if hasattr(e, 'stderr') and e.stderr:
-                print(f"Failed to build PEX: {e.stderr.decode()}")
+                self.logger.error(f"Failed to build PEX: {e.stderr.decode()}")
             else:
-                print(f"Failed to build PEX: {e}")
+                self.logger.error(f"Failed to build PEX: {e}")
             raise
 
     def create_binary_scripts(self, pex_path: Path, package_name: str, binaries: List[str]) -> List[Path]:
@@ -212,7 +216,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             
             # Make the script executable
             os.chmod(script_path, 0o755)
-            print(f"Created binary script: {script_path}")
+            self.logger.info(f"Created binary script: {script_path}")
             script_paths.append(script_path)
             
         return script_paths
@@ -248,7 +252,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 for file_path in os.listdir(temp_dir):
                     tar.add(os.path.join(temp_dir, file_path), arcname=file_path)
             
-            print(f"Created tarball: {tarball_path}")
+            self.logger.info(f"Created tarball: {tarball_path}")
             
             # Calculate SHA256 hash of the tarball
             sha256_hash = hashlib.sha256()
@@ -257,7 +261,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                     sha256_hash.update(chunk)
             
             tarball_hash = sha256_hash.hexdigest()
-            print(f"SHA256 hash: {tarball_hash}")
+            self.logger.debug(f"SHA256 hash: {tarball_hash}")
             
             return tarball_path, tarball_hash
 
@@ -283,29 +287,29 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             try:
                 release = repo.get_release(tag_name)
             except GithubException:
-                print(f"Error: Release {tag_name} not found")
+                self.logger.error(f"Release {tag_name} not found")
                 return False
             
             # Check if asset already exists
             asset_name = tarball_path.name
             for asset in release.get_assets():
                 if asset.name == asset_name:
-                    print(f"Asset {asset_name} already exists, deleting it")
+                    self.logger.info(f"Asset {asset_name} already exists, deleting it")
                     asset.delete_asset()
                     break
             
-            print(f"Uploading tarball: {tarball_path}")
+            self.logger.info(f"Uploading tarball: {tarball_path}")
             release.upload_asset(
                 path=str(tarball_path),
                 name=asset_name,
                 content_type="application/gzip"
             )
             
-            print(f"Successfully uploaded tarball to release: {release.html_url}")
+            self.logger.info(f"Successfully uploaded tarball to release: {release.html_url}")
             return True
             
         except Exception as e:
-            print(f"Error uploading to GitHub release: {e}")
+            self.logger.error(f"Error uploading to GitHub release: {e}", exc_info=True)
             return False
 
     def process_package(self, package_name: str) -> bool:
@@ -318,19 +322,20 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             bool: True if successful, False if any errors occurred
         """
         try:
+            self.logger.info(f"Starting to process package: {package_name}")
             config = self.load_config(package_name)
             actual_package_name = config['package']
             binaries = config.get('binaries', [])
             
             if not binaries:
-                print(f"Error: No binaries specified for {package_name}")
+                self.logger.error(f"No binaries specified for {package_name}")
                 return False
             
             state = self.load_state(package_name)
             versions = state.get('versions', [])
             
             if not versions:
-                print(f"No versions found in state file for {package_name}")
+                self.logger.info(f"No versions found in state file for {package_name}")
                 return True
             
             has_changes = False
@@ -341,12 +346,14 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 has_release = version_info.get('release', False)
                 assets = version_info.get('assets', {})
                 
+                self.logger.debug(f"Processing {actual_package_name} {version}: requirements={has_requirements}, release={has_release}")
+                
                 # Only process versions with requirements and releases
                 if has_requirements and has_release:
                     # Check if we need to build for this platform
                     asset_name = f"{actual_package_name}-{self.os_name}-{self.arch_name}.tar.gz"
                     if asset_name in assets:
-                        print(f"Asset {asset_name} already exists for {actual_package_name} {version}, skipping")
+                        self.logger.info(f"Asset {asset_name} already exists for {actual_package_name} {version}, skipping")
                         continue
                     
                     try:
@@ -366,19 +373,20 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                             version_info['assets'][asset_name] = tarball_hash
                             has_changes = True
                         else:
-                            print(f"Failed to upload {asset_name} for {actual_package_name} {version}")
+                            self.logger.error(f"Failed to upload {asset_name} for {actual_package_name} {version}")
                             
                     except Exception as e:
-                        print(f"Error processing {actual_package_name} {version}: {e}")
+                        self.logger.error(f"Error processing {actual_package_name} {version}: {e}", exc_info=True)
                         return False
             
             # Save state if there were changes
             if has_changes:
                 self.save_state(package_name, state)
                 
+            self.logger.info(f"Successfully processed package: {package_name}")
             return True
         except Exception as e:
-            print(f"Error processing package {package_name}: {e}")
+            self.logger.error(f"Error processing package {package_name}: {e}", exc_info=True)
             return False
 
 
@@ -393,12 +401,23 @@ def main():
     parser.add_argument("--github-token", help="GitHub token for authentication")
     parser.add_argument("--github-repo", default="vgijssel/hermit-python-packages",
                         help="GitHub repository name (owner/repo)")
+    parser.add_argument("--log-level", default="INFO", 
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        help="Set the logging level")
     
     args = parser.parse_args()
     
+    # Configure logging
+    logging.basicConfig(
+        level=getattr(logging, args.log_level),
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    logger = logging.getLogger('pex_generator')
+    
     package_dir = Path("python")
     if not package_dir.exists():
-        print(f"Error: Package directory not found: {package_dir}")
+        logger.error(f"Package directory not found: {package_dir}")
         sys.exit(1)
     
     try:
@@ -412,15 +431,15 @@ def main():
         
         success = True
         for package in args.package:
-            print(f"Processing package: {package}")
+            logger.info(f"Processing package: {package}")
             if not generator.process_package(package):
-                print(f"Error: Failed to process package {package}")
+                logger.error(f"Failed to process package {package}")
                 success = False
         
         if not success:
             sys.exit(1)
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}", exc_info=True)
         sys.exit(1)
 
 
