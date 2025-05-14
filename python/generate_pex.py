@@ -265,13 +265,14 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             
             return tarball_path, tarball_hash
 
-    def upload_to_github_release(self, package_name: str, version: str, tarball_path: Path) -> bool:
+    def upload_to_github_release(self, package_name: str, version: str, tarball_path: Path, tarball_hash: str) -> bool:
         """Upload the tarball to a GitHub release.
         
         Args:
             package_name: Name of the package
             version: Version of the package
             tarball_path: Path to the tarball
+            tarball_hash: SHA256 hash of the tarball
             
         Returns:
             bool: True if successful, False otherwise
@@ -298,6 +299,14 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                     asset.delete_asset()
                     break
             
+            # Check if hash file already exists
+            hash_file_name = f"{asset_name.rsplit('.', 1)[0]}.sha256"
+            for asset in release.get_assets():
+                if asset.name == hash_file_name:
+                    self.logger.info(f"Asset {hash_file_name} already exists, deleting it")
+                    asset.delete_asset()
+                    break
+            
             self.logger.info(f"Uploading tarball: {tarball_path}")
             release.upload_asset(
                 path=str(tarball_path),
@@ -305,7 +314,22 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 content_type="application/gzip"
             )
             
-            self.logger.info(f"Successfully uploaded tarball to release: {release.html_url}")
+            # Create and upload SHA256 file
+            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.sha256') as temp_file:
+                temp_file.write(f"{tarball_hash}  {asset_name}\n")
+                temp_file_path = temp_file.name
+            
+            self.logger.info(f"Uploading SHA256 hash file: {hash_file_name}")
+            release.upload_asset(
+                path=temp_file_path,
+                name=hash_file_name,
+                content_type="text/plain"
+            )
+            
+            # Clean up temporary file
+            os.unlink(temp_file_path)
+            
+            self.logger.info(f"Successfully uploaded tarball and hash to release: {release.html_url}")
             return True
             
         except Exception as e:
@@ -367,7 +391,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                         tarball_path, tarball_hash = self.create_tarball(actual_package_name, pex_path, script_paths)
                         
                         # Upload to GitHub release
-                        success = self.upload_to_github_release(actual_package_name, version, tarball_path)
+                        success = self.upload_to_github_release(actual_package_name, version, tarball_path, tarball_hash)
                         if success:
                             # Update state with the new asset
                             version_info['assets'][asset_name] = tarball_hash
