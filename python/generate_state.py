@@ -120,24 +120,6 @@ class StateGenerator:
         
         return req_in_file.exists() and req_txt_file.exists()
 
-    def calculate_sha256(self, url: str) -> str:
-        """Calculate SHA256 hash of a file from URL.
-        
-        Args:
-            url: URL of the file
-            
-        Returns:
-            SHA256 hash as a hex string
-        """
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
-        
-        sha256_hash = hashlib.sha256()
-        for chunk in response.iter_content(chunk_size=4096):
-            sha256_hash.update(chunk)
-            
-        return sha256_hash.hexdigest()
-
     def _cache_github_releases(self):
         """Cache all GitHub releases to avoid multiple API calls."""
         try:
@@ -151,10 +133,10 @@ class StateGenerator:
                     "exists": True,
                     "is_prerelease": release.prerelease
                 }
-                
+
                 # Cache assets for each release
                 assets = {}
-                for asset in release.get_assets():
+                for asset in release.assets:
                     asset_name = asset.name
                     asset_url = asset.browser_download_url
                     assets[asset_name] = {
@@ -167,7 +149,7 @@ class StateGenerator:
             self.logger.info(f"Cached {len(self.github_releases)} GitHub releases")
         except Exception as e:
             self.logger.error(f"Error caching GitHub releases: {e}", exc_info=True)
-            # Continue without cache - individual checks will be slower but still work
+            sys.exit(1)
 
     def check_github_release(self, package_name: str, version: str) -> Dict:
         """Check if a GitHub release exists for the given package and version.
@@ -179,67 +161,23 @@ class StateGenerator:
         Returns:
             Dict containing release information
         """
-        result = {
-            "exists": False,
-            "is_prerelease": False,
-            "assets": {}
-        }
+        tag_name = f"{package_name}-v{version}"
         
-        try:
-            # Format the tag name as package-name-vX.Y.Z
-            tag_name = f"{package_name}-v{version}"
-            
-            # Check if release exists in cache
-            if tag_name in self.github_releases:
-                self.logger.debug(f"Found release {tag_name} in cache")
-                result["exists"] = True
-                result["is_prerelease"] = self.github_releases[tag_name]["is_prerelease"]
-                
-                # Get assets from cache
-                if tag_name in self.github_release_assets:
-                    for asset_name, asset_info in self.github_release_assets[tag_name].items():
-                        # Calculate SHA256 if not already done
-                        if asset_info["sha256"] is None:
-                            try:
-                                sha256 = self.calculate_sha256(asset_info["url"])
-                                asset_info["sha256"] = sha256
-                            except Exception as e:
-                                self.logger.error(f"Error calculating SHA256 for {asset_name}: {e}")
-                                asset_info["sha256"] = ""
-                        
-                        result["assets"][asset_name] = asset_info["sha256"]
-            else:
-                # Fallback to direct API call if not in cache
-                self.logger.debug(f"Release {tag_name} not found in cache, checking directly")
-                repo = self.github.get_repo(self.github_repo)
-                
-                try:
-                    # Try to get the release by tag name
-                    release = repo.get_release(tag_name)
-                    result["exists"] = True
-                    result["is_prerelease"] = release.prerelease
-                    
-                    # Get assets
-                    for asset in release.get_assets():
-                        asset_name = asset.name
-                        asset_url = asset.browser_download_url
-                        
-                        # Calculate SHA256 of the asset
-                        try:
-                            sha256 = self.calculate_sha256(asset_url)
-                            result["assets"][asset_name] = sha256
-                        except Exception as e:
-                            self.logger.error(f"Error calculating SHA256 for {asset_name}: {e}")
-                            result["assets"][asset_name] = ""
-                    
-                except GithubException:
-                    # Release doesn't exist
-                    pass
-                
-        except Exception as e:
-            self.logger.error(f"Error checking GitHub release: {e}", exc_info=True)
-            
-        return result
+        # Check if release exists in cache
+        if tag_name in self.github_releases:
+            return {
+                "exists": True,
+                "is_prerelease": self.github_releases[tag_name]["is_prerelease"],
+                "assets": self.github_release_assets.get(tag_name, {})
+            }
+            self.logger.debug(f"Found release {tag_name} in cache")
+        else:
+            return {
+                "exists": False,
+                "is_prerelease": False,
+                "assets": {}
+            }
+
 
     def generate_state(self, package_name: str) -> Dict:
         """Generate state for a package.

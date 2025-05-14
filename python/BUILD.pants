@@ -1,14 +1,9 @@
 python_sources(
-    name="build_pex_packages",
-    sources=["build_pex_packages.py"],
-)
-
-python_sources(
-    name="generate_hermit_manifests",
-    sources=["generate_hermit_manifests.py"],
-)
-
-python_sources(
-    name="finalize_releases",
-    sources=["finalize_releases.py"],
+    sources=[
+        "generate_state.py",
+        "generate_requirements.py",
+        "generate_releases.py",
+        "generate_pex.py",
+        "generate_hermit_manifest.py",
+    ],
 )
