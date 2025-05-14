@@ -40,6 +40,11 @@ class StateGenerator:
         # Initialize GitHub client
         self.github = Github(self.github_token)
         self.logger.info(f"StateGenerator initialized for repo: {github_repo}")
+        
+        # Cache all GitHub releases
+        self.github_releases = {}
+        self.github_release_assets = {}
+        self._cache_github_releases()
 
     def load_config(self, package_name: str) -> Dict:
         """Load the package configuration from config.yaml.
@@ -133,6 +138,37 @@ class StateGenerator:
             
         return sha256_hash.hexdigest()
 
+    def _cache_github_releases(self):
+        """Cache all GitHub releases to avoid multiple API calls."""
+        try:
+            self.logger.info(f"Caching all GitHub releases from {self.github_repo}")
+            repo = self.github.get_repo(self.github_repo)
+            releases = repo.get_releases()
+            
+            for release in releases:
+                tag_name = release.tag_name
+                self.github_releases[tag_name] = {
+                    "exists": True,
+                    "is_prerelease": release.prerelease
+                }
+                
+                # Cache assets for each release
+                assets = {}
+                for asset in release.get_assets():
+                    asset_name = asset.name
+                    asset_url = asset.browser_download_url
+                    assets[asset_name] = {
+                        "url": asset_url,
+                        "sha256": None  # Will be calculated on demand
+                    }
+                
+                self.github_release_assets[tag_name] = assets
+                
+            self.logger.info(f"Cached {len(self.github_releases)} GitHub releases")
+        except Exception as e:
+            self.logger.error(f"Error caching GitHub releases: {e}", exc_info=True)
+            # Continue without cache - individual checks will be slower but still work
+
     def check_github_release(self, package_name: str, version: str) -> Dict:
         """Check if a GitHub release exists for the given package and version.
         
@@ -153,34 +189,55 @@ class StateGenerator:
             # Format the tag name as package-name-vX.Y.Z
             tag_name = f"{package_name}-v{version}"
             
-            # Get the repository
-            repo = self.github.get_repo(self.github_repo)
-            
-            try:
-                # Try to get the release by tag name
-                release = repo.get_release(tag_name)
+            # Check if release exists in cache
+            if tag_name in self.github_releases:
+                self.logger.debug(f"Found release {tag_name} in cache")
                 result["exists"] = True
-                result["is_prerelease"] = release.prerelease
+                result["is_prerelease"] = self.github_releases[tag_name]["is_prerelease"]
                 
-                # Get assets
-                for asset in release.get_assets():
-                    asset_name = asset.name
-                    asset_url = asset.browser_download_url
+                # Get assets from cache
+                if tag_name in self.github_release_assets:
+                    for asset_name, asset_info in self.github_release_assets[tag_name].items():
+                        # Calculate SHA256 if not already done
+                        if asset_info["sha256"] is None:
+                            try:
+                                sha256 = self.calculate_sha256(asset_info["url"])
+                                asset_info["sha256"] = sha256
+                            except Exception as e:
+                                self.logger.error(f"Error calculating SHA256 for {asset_name}: {e}")
+                                asset_info["sha256"] = ""
+                        
+                        result["assets"][asset_name] = asset_info["sha256"]
+            else:
+                # Fallback to direct API call if not in cache
+                self.logger.debug(f"Release {tag_name} not found in cache, checking directly")
+                repo = self.github.get_repo(self.github_repo)
+                
+                try:
+                    # Try to get the release by tag name
+                    release = repo.get_release(tag_name)
+                    result["exists"] = True
+                    result["is_prerelease"] = release.prerelease
                     
-                    # Calculate SHA256 of the asset
-                    try:
-                        sha256 = self.calculate_sha256(asset_url)
-                        result["assets"][asset_name] = sha256
-                    except Exception as e:
-                        print(f"Error calculating SHA256 for {asset_name}: {e}")
-                        result["assets"][asset_name] = ""
-                
-            except GithubException:
-                # Release doesn't exist
-                pass
+                    # Get assets
+                    for asset in release.get_assets():
+                        asset_name = asset.name
+                        asset_url = asset.browser_download_url
+                        
+                        # Calculate SHA256 of the asset
+                        try:
+                            sha256 = self.calculate_sha256(asset_url)
+                            result["assets"][asset_name] = sha256
+                        except Exception as e:
+                            self.logger.error(f"Error calculating SHA256 for {asset_name}: {e}")
+                            result["assets"][asset_name] = ""
+                    
+                except GithubException:
+                    # Release doesn't exist
+                    pass
                 
         except Exception as e:
-            print(f"Error checking GitHub release: {e}")
+            self.logger.error(f"Error checking GitHub release: {e}", exc_info=True)
             
         return result
 
