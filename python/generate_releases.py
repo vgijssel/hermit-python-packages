@@ -6,6 +6,7 @@ Generate GitHub releases for Python packages based on state.yaml files.
 import argparse
 import os
 import sys
+import logging
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 import yaml
@@ -26,14 +27,16 @@ class ReleaseGenerator:
         self.package_dir = Path(package_dir)
         self.github_repo = github_repo
         self.github_token = github_token or os.environ.get("GITHUB_TOKEN")
+        self.logger = logging.getLogger('release_generator')
         
         # Hard failure if GitHub token is missing
         if not self.github_token:
-            print("Error: GITHUB_TOKEN not set. GitHub API operations will fail.")
+            self.logger.error("GITHUB_TOKEN not set. GitHub API operations will fail.")
             sys.exit(1)
         
         # Initialize GitHub client
         self.github = Github(self.github_token)
+        self.logger.info(f"ReleaseGenerator initialized for repo: {github_repo}")
 
     def load_config(self, package_name: str) -> Dict:
         """Load the package configuration from config.yaml.
@@ -88,7 +91,7 @@ class ReleaseGenerator:
         with open(state_path, "w") as f:
             yaml.dump(state, f, default_flow_style=False)
         
-        print(f"State saved to {state_path}")
+        self.logger.info(f"State saved to {state_path}")
 
     def check_requirements_exist(self, package_name: str, version: str) -> bool:
         """Check if requirements files exist for the given package and version.
@@ -104,7 +107,9 @@ class ReleaseGenerator:
         req_in_file = version_dir / "requirements.in"
         req_txt_file = version_dir / "requirements.txt"
         
-        return req_in_file.exists() and req_txt_file.exists()
+        exists = req_in_file.exists() and req_txt_file.exists()
+        self.logger.debug(f"Requirements files for {package_name} {version}: {exists}")
+        return exists
 
     def create_github_release(self, package_name: str, version: str) -> Tuple[bool, Optional[object]]:
         """Create a GitHub release for the given package and version.
@@ -129,11 +134,11 @@ class ReleaseGenerator:
             # Check if release already exists
             try:
                 release = repo.get_release(tag_name)
-                print(f"Release {tag_name} already exists.")
+                self.logger.info(f"Release {tag_name} already exists.")
                 return True, release
             except GithubException:
                 # Create the release in prerelease mode
-                print(f"Creating GitHub release: {release_name} (prerelease mode)")
+                self.logger.info(f"Creating GitHub release: {release_name} (prerelease mode)")
                 release_message = f"Release of {package_name} version {version}"
                 release = repo.create_git_release(
                     tag=tag_name,
@@ -142,10 +147,11 @@ class ReleaseGenerator:
                     draft=False,
                     prerelease=True  # Create in prerelease mode
                 )
+                self.logger.info(f"Successfully created release: {tag_name}")
                 return True, release
                 
         except Exception as e:
-            print(f"Error creating GitHub release: {e}")
+            self.logger.error(f"Error creating GitHub release: {e}", exc_info=True)
             return False, None
 
     def process_package(self, package_name: str) -> bool:
@@ -158,6 +164,7 @@ class ReleaseGenerator:
             bool: True if successful, False if any errors occurred
         """
         try:
+            self.logger.info(f"Starting to process package: {package_name}")
             config = self.load_config(package_name)
             actual_package_name = config['package']
             
@@ -165,7 +172,7 @@ class ReleaseGenerator:
             versions = state.get('versions', [])
             
             if not versions:
-                print(f"No versions found in state file for {package_name}")
+                self.logger.info(f"No versions found in state file for {package_name}")
                 return True
             
             has_changes = False
@@ -174,29 +181,32 @@ class ReleaseGenerator:
                 has_requirements = version_info.get('requirements', False)
                 has_release = version_info.get('release', False)
                 
+                self.logger.debug(f"Processing {actual_package_name} {version}: requirements={has_requirements}, release={has_release}")
+                
                 # Only create releases for versions with requirements but no release
                 if has_requirements and not has_release:
                     # Double-check that requirements files actually exist
                     if not self.check_requirements_exist(package_name, version):
-                        print(f"Warning: Requirements files not found for {actual_package_name} {version}")
+                        self.logger.warning(f"Requirements files not found for {actual_package_name} {version}")
                         continue
                     
-                    print(f"Creating release for {actual_package_name} {version}")
+                    self.logger.info(f"Creating release for {actual_package_name} {version}")
                     success, _ = self.create_github_release(actual_package_name, version)
                     if success:
                         version_info['release'] = True
                         has_changes = True
                     else:
-                        print(f"Failed to create release for {actual_package_name} {version}")
+                        self.logger.error(f"Failed to create release for {actual_package_name} {version}")
                         return False
             
             # Save state if there were changes
             if has_changes:
                 self.save_state(package_name, state)
                 
+            self.logger.info(f"Successfully processed package: {package_name}")
             return True
         except Exception as e:
-            print(f"Error processing package {package_name}: {e}")
+            self.logger.error(f"Error processing package {package_name}: {e}", exc_info=True)
             return False
 
 
@@ -207,12 +217,23 @@ def main():
     parser.add_argument("--github-token", help="GitHub token for authentication")
     parser.add_argument("--github-repo", default="vgijssel/hermit-python-packages",
                         help="GitHub repository name (owner/repo)")
+    parser.add_argument("--log-level", default="INFO", 
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        help="Set the logging level")
     
     args = parser.parse_args()
     
+    # Configure logging
+    logging.basicConfig(
+        level=getattr(logging, args.log_level),
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    logger = logging.getLogger('release_generator')
+    
     package_dir = Path("python")
     if not package_dir.exists():
-        print(f"Error: Package directory not found: {package_dir}")
+        logger.error(f"Package directory not found: {package_dir}")
         sys.exit(1)
     
     try:
@@ -224,15 +245,15 @@ def main():
         
         success = True
         for package in args.package:
-            print(f"Processing package: {package}")
+            logger.info(f"Processing package: {package}")
             if not generator.process_package(package):
-                print(f"Error: Failed to process package {package}")
+                logger.error(f"Failed to process package {package}")
                 success = False
         
         if not success:
             sys.exit(1)
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}", exc_info=True)
         sys.exit(1)
 
 
