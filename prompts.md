@@ -125,3 +125,17 @@ This script will be responsible for generating the Hermit manifest file for each
 ## Use a Jinja2 template for the Hermit manifest
 
 Ensure that each version in the created Hermit manifest in python/generate_hermit_manifest.py specifies `runtime-dependencies = ["python3@3.10"]` within the version block indicating the Python version used for that package version. Secondly create the hermit manifest using a Jinja2 template for better readability.
+
+## Use the GitHub release to store build information
+
+The GitHub release associated with the pex binary, bash scripts and tarball archive should also include the build information. The build information contains the Python version and the sha256 digest of each individual tarball archive. The build information is stored in the GitHub release inside the description as yaml. When running `python/generate_state.py` this information is extracted and parsed and used to update the state file. The build information is stored in the GitHub release as a yaml block. For example:
+
+```yaml
+config_version: 1
+assets:
+  aider-chat-darwin-arm64.tar.gz: 29100fb6e7c8a5ecb5a0711033113364f71c9c33d0c12ea65b54b1996d72ec31
+python: '3.11'
+version: 0.83.1
+```
+
+This build information is written to the GitHub release in the script `generate_build_info.py`. The `generate_pex.py` script will no longer upload the digest and will only update the state file with the sha256 digest of the tarball archive. 

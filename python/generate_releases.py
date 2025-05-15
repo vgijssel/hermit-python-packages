@@ -115,11 +115,10 @@ class ReleaseGenerator:
             
             # Check if release already exists
             self.logger.info(f"Creating GitHub release: {release_name} (prerelease mode)")
-            release_message = f"Release of {package_name} version {version}"
             release = repo.create_git_release(
                 tag=tag_name,
                 name=release_name,
-                message=release_message,
+                message='',
                 draft=False,
                 prerelease=True  # Create in prerelease mode
             )

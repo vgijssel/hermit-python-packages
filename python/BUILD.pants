@@ -5,5 +5,6 @@ python_sources(
         "generate_releases.py",
         "generate_pex.py",
         "generate_hermit_manifest.py",
+        "generate_build_info.py",
     ],
 )
