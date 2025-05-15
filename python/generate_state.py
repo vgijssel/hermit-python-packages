@@ -221,6 +221,7 @@ class StateGenerator:
         config = self.load_config(package_name)
         actual_package_name = config['package']
         versions_config = config.get('versions', [])
+        config_version = config.get('config_version', 1)
         
         if not versions_config:
             print(f"Error: No versions specified for {package_name}")
@@ -253,7 +254,10 @@ class StateGenerator:
                     version_map[v] = python_version
 
         # Generate state for each version
-        state = {"versions": []}
+        state = {
+            "config_version": config_version,
+            "versions": []
+        }
         for version, python_version in version_map.items():
             self.logger.info(f"Processing {actual_package_name} version {version} with Python {python_version}")
             
