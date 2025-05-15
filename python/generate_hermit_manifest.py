@@ -104,11 +104,11 @@ binaries = {{ binaries | tojson }}
 {% endif %}repository = "https://github.com/vgijssel/hermit-python-packages"
 source = "https://github.com/vgijssel/hermit-python-packages/releases/download/{{ package_name }}-v${version}/{{ package_name }}-${os}-${arch}.tar.gz"
 
-{% for version in versions %}version "{{ version }}" {
-  runtime-dependencies = ["python3@3.10"]
+{% for version_info in versions %}version "{{ version_info['version'] }}" {
+  runtime-dependencies = ["python3@{{ version_info['python'] }}"]
 }
-
-{% endfor %}sha256sums = {
+{% endfor %}
+sha256sums = {
 {% for url, sha256 in sha256sums %}  "{{ url }}": "{{ sha256 }}",
 {% endfor %}}
 """
@@ -148,9 +148,10 @@ source = "https://github.com/vgijssel/hermit-python-packages/releases/download/{
             
             for version_info in versions:
                 version = version_info['version']
+                python_version = version_info['python']
                 assets = version_info.get('assets', {})
 
-                self.logger.debug(f"Processing {actual_package_name} {version}: assets={assets}")
+                self.logger.debug(f"Processing {actual_package_name} {version}: assets={assets} python_version={python_version}")
                 
                 # Add package name to version_info for check_version_complete
                 version_info['package'] = actual_package_name
@@ -158,7 +159,7 @@ source = "https://github.com/vgijssel/hermit-python-packages/releases/download/{
                 self.logger.debug(f"Checking completeness of version {version}")
                 if self.check_version_complete(version_info):
                     self.logger.info(f"Version {version} is complete with all required assets")
-                    complete_versions.append(version)
+                    complete_versions.append(version_info)
                     
                     # Add SHA256 sums for all assets
                     for asset_name, sha256 in assets.items():
@@ -170,10 +171,11 @@ source = "https://github.com/vgijssel/hermit-python-packages/releases/download/{
                 self.logger.warning(f"No complete versions found for {package_name}")
                 return False
             
-            # Sort versions
-            complete_versions.sort(reverse=True)
-            self.logger.info(f"Found {len(complete_versions)} complete versions: {', '.join(complete_versions)}")
-            
+            # sort complete versions by version key inside the dict
+            complete_versions = sorted(complete_versions, key=lambda x: x['version'], reverse=True)
+
+            self.logger.info(f"Found {len(complete_versions)} complete versions: {', '.join([v['version'] for v in complete_versions])}")
+
             # Generate manifest content using Jinja2 template
             template = self._get_manifest_template()
             manifest_content = template.render(
