@@ -202,8 +202,29 @@ class ReleaseGenerator:
                 
                 self.logger.debug(f"Processing {actual_package_name} {version}: requirements={has_requirements}, release={has_release}")
                 
+                # Check if release exists but doesn't have release_info
+                if has_release and (not release_info or not release_info.get('build_info')):
+                    self.logger.info(f"Release exists without release_info, recreating release for {actual_package_name} {version}")
+                    
+                    # Delete existing release
+                    self.delete_github_release(actual_package_name, version)
+                    
+                    # Reset release state
+                    version_info['release'] = False
+                    version_info['assets'] = {}
+                    version_info['release_info'] = {}
+                    has_changes = True
+                    
+                    # Create new release
+                    success, _ = self.create_github_release(actual_package_name, version)
+                    if success:
+                        version_info['release'] = True
+                    else:
+                        self.logger.error(f"Failed to recreate release for {actual_package_name} {version}")
+                        return False
+                
                 # Check if build_info in release_info matches config_version
-                if has_release and release_info and 'build_info' in release_info:
+                elif has_release and release_info and 'build_info' in release_info:
                     release_config_version = release_info['build_info'].get('config_version')
                     if release_config_version != config_version:
                         self.logger.info(f"Config version changed from {release_config_version} to {config_version}, recreating release for {actual_package_name} {version}")
