@@ -10,6 +10,7 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Set, Optional
 import yaml
+from jinja2 import Template
 
 
 class HermitManifestGenerator:
@@ -95,6 +96,24 @@ class HermitManifestGenerator:
         
         return result
 
+    def _get_manifest_template(self) -> Template:
+        """Get the Jinja2 template for the Hermit manifest."""
+        template_str = """description = "{{ description }}"
+binaries = {{ binaries | tojson }}
+{% if test %}test = "{{ test }}"
+{% endif %}repository = "https://github.com/vgijssel/hermit-python-packages"
+source = "https://github.com/vgijssel/hermit-python-packages/releases/download/{{ package_name }}-v${version}/{{ package_name }}-${os}-${arch}.tar.gz"
+
+{% for version in versions %}version "{{ version }}" {
+  runtime-dependencies = ["python3@3.10"]
+}
+
+{% endfor %}sha256sums = {
+{% for url, sha256 in sha256sums %}  "{{ url }}": "{{ sha256 }}",
+{% endfor %}}
+"""
+        return Template(template_str)
+
     def generate_manifest(self, package_name: str) -> bool:
         """Generate a Hermit manifest file for the package.
         
@@ -155,24 +174,16 @@ class HermitManifestGenerator:
             complete_versions.sort(reverse=True)
             self.logger.info(f"Found {len(complete_versions)} complete versions: {', '.join(complete_versions)}")
             
-            # Generate manifest content
-            manifest_content = f'description = "{description}"\n'
-            manifest_content += f'binaries = {str(binaries).replace("\'", "\"")}\n'
-            if test:
-                manifest_content += f'test = "{test}"\n'
-            manifest_content += 'repository = "https://github.com/vgijssel/hermit-python-packages"\n'
-            manifest_content += 'source = "https://github.com/vgijssel/hermit-python-packages/releases/download/'
-            manifest_content += f'{actual_package_name}-v${{version}}/{actual_package_name}-${{os}}-${{arch}}.tar.gz"\n\n'
-            
-            # Add version blocks
-            for version in complete_versions:
-                manifest_content += f'version "{version}" {{\n}}\n\n'
-            
-            # Add SHA256 sums
-            manifest_content += 'sha256sums = {\n'
-            for url, sha256 in sorted(sha256sums.items()):
-                manifest_content += f'  "{url}": "{sha256}",\n'
-            manifest_content += '}\n'
+            # Generate manifest content using Jinja2 template
+            template = self._get_manifest_template()
+            manifest_content = template.render(
+                description=description,
+                binaries=binaries,
+                test=test,
+                package_name=actual_package_name,
+                versions=complete_versions,
+                sha256sums=sorted(sha256sums.items())
+            )
             
             # Write manifest file
             manifest_path = self.repo_root / f"{actual_package_name}.hcl"
