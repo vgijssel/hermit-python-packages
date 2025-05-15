@@ -6,6 +6,7 @@ Generate Hermit manifest files for Python packages based on state.yaml files.
 import argparse
 import os
 import sys
+import logging
 from pathlib import Path
 from typing import Dict, List, Set, Optional
 import yaml
@@ -22,6 +23,7 @@ class HermitManifestGenerator:
         """
         self.package_dir = Path(package_dir)
         self.repo_root = Path.cwd()
+        self.logger = logging.getLogger('hermit_manifest_generator')
 
     def load_config(self, package_name: str) -> Dict:
         """Load the package configuration from config.yaml.
@@ -34,7 +36,7 @@ class HermitManifestGenerator:
         """
         config_path = self.package_dir / package_name / "config.yaml"
         if not config_path.exists():
-            print(f"Error: Config file not found: {config_path}")
+            self.logger.error(f"Config file not found: {config_path}")
             sys.exit(1)
         
         with open(config_path, "r") as f:
@@ -57,7 +59,7 @@ class HermitManifestGenerator:
         """
         state_path = self.package_dir / package_name / "state.yaml"
         if not state_path.exists():
-            print(f"Error: State file not found: {state_path}")
+            self.logger.error(f"State file not found: {state_path}")
             sys.exit(1)
         
         with open(state_path, "r") as f:
@@ -98,6 +100,7 @@ class HermitManifestGenerator:
             
             asset_name = f"{version_info['package']}-{os_name}-{arch_name}.tar.gz"
             if asset_name not in assets:
+                self.logger.debug(f"Missing asset {asset_name} for version {version_info['version']}")
                 return False
         
         return True
@@ -112,6 +115,7 @@ class HermitManifestGenerator:
             bool: True if successful, False otherwise
         """
         try:
+            self.logger.info(f"Generating manifest for package: {package_name}")
             config = self.load_config(package_name)
             actual_package_name = config['package']
             description = config.get('description', f"{actual_package_name} package")
@@ -119,14 +123,14 @@ class HermitManifestGenerator:
             binaries = config.get('binaries', [])
             
             if not binaries:
-                print(f"Error: No binaries specified for {package_name}")
+                self.logger.error(f"No binaries specified for {package_name}")
                 return False
             
             state = self.load_state(package_name)
             versions = state.get('versions', [])
             
             if not versions:
-                print(f"No versions found in state file for {package_name}")
+                self.logger.info(f"No versions found in state file for {package_name}")
                 return False
             
             # Filter versions that have all required platform assets
@@ -140,20 +144,24 @@ class HermitManifestGenerator:
                 # Add package name to version_info for check_version_complete
                 version_info['package'] = actual_package_name
                 
+                self.logger.debug(f"Checking completeness of version {version}")
                 if self.check_version_complete(version_info):
+                    self.logger.info(f"Version {version} is complete with all required assets")
                     complete_versions.append(version)
                     
                     # Add SHA256 sums for all assets
                     for asset_name, sha256 in assets.items():
                         url = f"https://github.com/vgijssel/hermit-python-packages/releases/download/{actual_package_name}-v{version}/{asset_name}"
                         sha256sums[url] = sha256
+                        self.logger.debug(f"Added SHA256 for {asset_name}: {sha256}")
             
             if not complete_versions:
-                print(f"No complete versions found for {package_name}")
+                self.logger.warning(f"No complete versions found for {package_name}")
                 return False
             
             # Sort versions
             complete_versions.sort(reverse=True)
+            self.logger.info(f"Found {len(complete_versions)} complete versions: {', '.join(complete_versions)}")
             
             # Generate manifest content
             manifest_content = f'description = "{description}"\n'
@@ -179,11 +187,11 @@ class HermitManifestGenerator:
             with open(manifest_path, "w") as f:
                 f.write(manifest_content)
             
-            print(f"Generated Hermit manifest: {manifest_path}")
+            self.logger.info(f"Generated Hermit manifest: {manifest_path}")
             return True
             
         except Exception as e:
-            print(f"Error generating manifest for {package_name}: {e}")
+            self.logger.error(f"Error generating manifest for {package_name}: {e}", exc_info=True)
             return False
 
     def process_package(self, package_name: str) -> bool:
@@ -195,19 +203,36 @@ class HermitManifestGenerator:
         Returns:
             bool: True if successful, False if any errors occurred
         """
-        return self.generate_manifest(package_name)
+        self.logger.info(f"Processing package: {package_name}")
+        result = self.generate_manifest(package_name)
+        if result:
+            self.logger.info(f"Successfully processed package: {package_name}")
+        else:
+            self.logger.error(f"Failed to process package: {package_name}")
+        return result
 
 
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Generate Hermit manifest files for Python packages")
     parser.add_argument("package", nargs='+', help="Package directory name(s) (under python/)")
+    parser.add_argument("--log-level", default="INFO", 
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        help="Set the logging level")
     
     args = parser.parse_args()
     
+    # Configure logging
+    logging.basicConfig(
+        level=getattr(logging, args.log_level),
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    logger = logging.getLogger('hermit_manifest_generator')
+    
     package_dir = Path("python")
     if not package_dir.exists():
-        print(f"Error: Package directory not found: {package_dir}")
+        logger.error(f"Package directory not found: {package_dir}")
         sys.exit(1)
     
     try:
@@ -215,15 +240,15 @@ def main():
         
         success = True
         for package in args.package:
-            print(f"Processing package: {package}")
+            logger.info(f"Processing package: {package}")
             if not generator.process_package(package):
-                print(f"Error: Failed to process package {package}")
+                logger.error(f"Failed to process package {package}")
                 success = False
         
         if not success:
             sys.exit(1)
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}", exc_info=True)
         sys.exit(1)
 
 
