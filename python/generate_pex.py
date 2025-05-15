@@ -221,7 +221,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             
         return script_paths
 
-    def create_tarball(self, package_name: str, pex_path: Path, script_paths: List[Path]) -> Tuple[Path, str, Path]:
+    def create_tarball(self, package_name: str, pex_path: Path, script_paths: List[Path]) -> Tuple[Path, str]:
         """Create a tarball containing the PEX file and binary scripts.
         
         Args:
@@ -230,7 +230,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             script_paths: List of paths to binary scripts
             
         Returns:
-            Tuple of (path to the created tarball, SHA256 hash of the tarball, path to the hash file)
+            Tuple of (path to the created tarball, SHA256 hash of the tarball)
         """
         # Create tarball filename with OS and architecture
         tarball_filename = f"{package_name}-{self.os_name}-{self.arch_name}.tar.gz"
@@ -263,23 +263,18 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
             tarball_hash = sha256_hash.hexdigest()
             self.logger.debug(f"SHA256 hash: {tarball_hash}")
             
-            # Write hash to file in dist directory
-            tarball_hash_path = Path(f"{tarball_path}.sha256")
-            with open(tarball_hash_path, "w") as f:
-                f.write(f"{tarball_hash}  {tarball_filename}\n")
-            self.logger.info(f"Wrote SHA256 hash to: {tarball_hash_path}")
+            # No longer writing hash to file
+            self.logger.info(f"Calculated SHA256 hash: {tarball_hash}")
             
-            return tarball_path, tarball_hash, tarball_hash_path
+            return tarball_path, tarball_hash
 
-    def upload_to_github_release(self, package_name: str, version: str, tarball_path: Path, tarball_hash: str, tarball_hash_path: Path) -> bool:
+    def upload_to_github_release(self, package_name: str, version: str, tarball_path: Path) -> bool:
         """Upload the tarball to a GitHub release.
         
         Args:
             package_name: Name of the package
             version: Version of the package
             tarball_path: Path to the tarball
-            tarball_hash: SHA256 hash of the tarball
-            tarball_hash_path: Path to the hash file
             
         Returns:
             bool: True if successful, False otherwise
@@ -300,14 +295,6 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                     asset.delete_asset()
                     break
             
-            # Check if hash file already exists
-            hash_file_name = f"{asset_name.rsplit('.', 1)[0]}.sha256"
-            for asset in release.get_assets():
-                if asset.name == hash_file_name:
-                    self.logger.info(f"Asset {hash_file_name} already exists, deleting it")
-                    asset.delete_asset()
-                    break
-            
             self.logger.info(f"Uploading tarball: {tarball_path}")
             release.upload_asset(
                 path=str(tarball_path),
@@ -315,15 +302,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 content_type="application/gzip"
             )
             
-            # Upload SHA256 file
-            self.logger.info(f"Uploading SHA256 hash file: {hash_file_name}")
-            release.upload_asset(
-                path=str(tarball_hash_path),
-                name=hash_file_name,
-                content_type="text/plain"
-            )
-            
-            self.logger.info(f"Successfully uploaded tarball and hash to release: {release.html_url}")
+            self.logger.info(f"Successfully uploaded tarball to release: {release.html_url}")
             return True
             
         except Exception as e:
@@ -382,10 +361,10 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                         script_paths = self.create_binary_scripts(pex_path, actual_package_name, binaries)
                         
                         # Create tarball and calculate hash
-                        tarball_path, tarball_hash, tarball_hash_path = self.create_tarball(actual_package_name, pex_path, script_paths)
+                        tarball_path, tarball_hash = self.create_tarball(actual_package_name, pex_path, script_paths)
                         
                         # Upload to GitHub release
-                        success = self.upload_to_github_release(actual_package_name, version, tarball_path, tarball_hash, tarball_hash_path)
+                        success = self.upload_to_github_release(actual_package_name, version, tarball_path)
                         if success:
                             # Update state with the new asset
                             version_info['assets'][asset_name] = tarball_hash

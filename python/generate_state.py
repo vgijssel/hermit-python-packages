@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Any
 import yaml
 import requests
 import semver
+import re
 from github import Github, GithubException
 
 
@@ -134,15 +135,19 @@ class StateGenerator:
                     "is_prerelease": release.prerelease
                 }
 
-                # Cache assets for each release
+                # Extract build information from release description
                 assets = {}
-                for asset in release.assets:
-                    asset_name = asset.name
-                    asset_url = asset.browser_download_url
-                    assets[asset_name] = {
-                        "url": asset_url,
-                        "sha256": None  # Will be calculated on demand
-                    }
+                build_info = self._extract_build_info_from_description(release.body)
+                
+                if build_info and "assets" in build_info:
+                    for asset_name, sha256 in build_info["assets"].items():
+                        assets[asset_name] = sha256
+                else:
+                    # Fallback to just listing assets without hashes
+                    for asset in release.assets:
+                        asset_name = asset.name
+                        if not asset_name.endswith(".sha256"):  # Skip hash files
+                            assets[asset_name] = None
                 
                 self.github_release_assets[tag_name] = assets
                 
@@ -150,6 +155,31 @@ class StateGenerator:
         except Exception as e:
             self.logger.error(f"Error caching GitHub releases: {e}", exc_info=True)
             sys.exit(1)
+
+    def _extract_build_info_from_description(self, description: str) -> Optional[Dict]:
+        """Extract build information from a GitHub release description.
+        
+        Args:
+            description: GitHub release description
+            
+        Returns:
+            Dict containing build information or None if not found
+        """
+        if not description:
+            return None
+            
+        # Look for YAML block in the description
+        yaml_match = re.search(r'```yaml\n(.*?)```', description, re.DOTALL)
+        if not yaml_match:
+            return None
+            
+        yaml_content = yaml_match.group(1)
+        try:
+            build_info = yaml.safe_load(yaml_content)
+            return build_info
+        except Exception as e:
+            self.logger.error(f"Error parsing build info YAML: {e}")
+            return None
 
     def check_github_release(self, package_name: str, version: str) -> Dict:
         """Check if a GitHub release exists for the given package and version.
