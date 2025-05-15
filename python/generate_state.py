@@ -130,24 +130,20 @@ class StateGenerator:
             
             for release in releases:
                 tag_name = release.tag_name
+                build_info = self._extract_build_info_from_description(release.body)
+
                 self.github_releases[tag_name] = {
                     "exists": True,
-                    "is_prerelease": release.prerelease
+                    "is_prerelease": release.prerelease,
+                    "build_info": build_info,
                 }
 
                 # Extract build information from release description
                 assets = {}
-                build_info = self._extract_build_info_from_description(release.body)
                 
                 if build_info and "assets" in build_info:
                     for asset_name, sha256 in build_info["assets"].items():
                         assets[asset_name] = sha256
-                else:
-                    # Fallback to just listing assets without hashes
-                    for asset in release.assets:
-                        asset_name = asset.name
-                        if not asset_name.endswith(".sha256"):  # Skip hash files
-                            assets[asset_name] = None
                 
                 self.github_release_assets[tag_name] = assets
                 
@@ -198,14 +194,16 @@ class StateGenerator:
             return {
                 "exists": True,
                 "is_prerelease": self.github_releases[tag_name]["is_prerelease"],
-                "assets": self.github_release_assets.get(tag_name, {})
+                "assets": self.github_release_assets.get(tag_name, {}),
+                "build_info": self.github_releases[tag_name]["build_info"],
             }
             self.logger.debug(f"Found release {tag_name} in cache")
         else:
             return {
                 "exists": False,
                 "is_prerelease": False,
-                "assets": {}
+                "assets": {},
+                "build_info": {},
             }
 
 
@@ -275,7 +273,8 @@ class StateGenerator:
                 "python": python_version,
                 "requirements": has_requirements,
                 "release": release_info["exists"],
-                "assets": release_info["assets"]
+                "assets": release_info["assets"],
+                "build_info": release_info["build_info"],
             })
         
         return state
