@@ -81,7 +81,7 @@ class BuildInfoGenerator:
             
         return state
 
-    def update_github_release_description(self, package_name: str, version: str, python_version: str, assets: Dict, state_build_info: Optional[Dict] = None) -> bool:
+    def update_github_release_description(self, package_name: str, version: str, python_version: str, assets: Dict, config_version: int, state_build_info: Optional[Dict] = None) -> bool:
         """Update the GitHub release description with build information.
         
         Args:
@@ -100,7 +100,7 @@ class BuildInfoGenerator:
             
             # Create build information YAML
             build_info = {
-                "config_version": 1,
+                "config_version": config_version,
                 "assets": assets,
                 "python": python_version,
                 "version": version
@@ -150,6 +150,7 @@ class BuildInfoGenerator:
             self.logger.info(f"Starting to process package: {package_name}")
             config = self.load_config(package_name)
             actual_package_name = config['package']
+            config_version = config.get('config_version', 1)
             
             state = self.load_state(package_name)
             versions = state.get('versions', [])
@@ -176,7 +177,7 @@ class BuildInfoGenerator:
                     if asset_hashes:
                         # Update GitHub release description
                         success = self.update_github_release_description(
-                            actual_package_name, version, python_version, asset_hashes, build_info
+                            actual_package_name, version, python_version, asset_hashes, config_version, build_info
                         )
                         if not success:
                             self.logger.error(f"Failed to update release description for {actual_package_name} {version}")

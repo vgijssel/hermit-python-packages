@@ -1,5 +1,5 @@
 package: aider-chat
-config_version: 1
+config_version: 2
 test: "aider --help"
 description: "Aider is a command-line tool that helps you write better code by providing real-time feedback and suggestions as you type."
 binaries:
