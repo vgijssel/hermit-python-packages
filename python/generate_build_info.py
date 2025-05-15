@@ -9,7 +9,7 @@ import sys
 import logging
 import re
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 import yaml
 from github import Github, GithubException
 
