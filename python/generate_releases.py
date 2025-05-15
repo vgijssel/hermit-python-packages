@@ -185,7 +185,7 @@ class ReleaseGenerator:
             config = self.load_config(package_name)
             actual_package_name = config['package']
             config_version = config.get('config_version', 1)
-            
+
             state = self.load_state(package_name)
             versions = state.get('versions', [])
             
@@ -199,6 +199,13 @@ class ReleaseGenerator:
                 has_requirements = version_info['requirements']
                 has_release = version_info['release']
                 release_info = version_info.get('release_info', {})
+
+                build_info = {
+                    "config_version": config_version,
+                    "python": version_info['python'],
+                    "version": version,
+                    "binaries": config['binaries'],
+                }
                 
                 self.logger.debug(f"Processing {actual_package_name} {version}: requirements={has_requirements}, release={has_release}")
                 
@@ -225,9 +232,10 @@ class ReleaseGenerator:
                 
                 # Check if build_info in release_info matches config_version
                 elif has_release and release_info and 'build_info' in release_info:
-                    release_config_version = release_info['build_info'].get('config_version')
-                    if release_config_version != config_version:
-                        self.logger.info(f"Config version changed from {release_config_version} to {config_version}, recreating release for {actual_package_name} {version}")
+                    release_build_info = release_info['build_info']
+
+                    if build_info != release_build_info:
+                        self.logger.info(f"Config version changed from {release_build_info} to {build_info}, recreating release for {actual_package_name} {version}")
                         
                         # Delete existing release
                         self.delete_github_release(actual_package_name, version)

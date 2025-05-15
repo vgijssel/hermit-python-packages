@@ -8,4 +8,4 @@ binaries:
 versions:
   # Using Python 3.11 for compatibility with all dependencies
   - version: 0.83.1
-    python: "3.11"
+    python: "3.10"

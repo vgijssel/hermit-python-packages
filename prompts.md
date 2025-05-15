@@ -143,3 +143,20 @@ This build information is written to the GitHub release in the script `generate_
 ## Only update the build information if there is a change
 
 The `generate_build_info.py` script will only update the build information if there is a change. The build_info from the state file should be compared to the build_info that's generated. If both the dicts are the same the build information is not updated. The build information is only updated if there is a change.
+
+## Release Info
+
+The Github release has the following information:
+
+```yaml
+build_info:
+  config_version: 2
+  python: '3.11'
+  version: 0.83.1
+  binaries:
+    - aider
+asset_info:
+  aider-chat-darwin-arm64.tar.gz: 71b68756b60f23991b855c7ff428afea27d64ab5b037656ce4d87651e60fa88b
+```
+
+This release information is uploaded in the `generate_build_info.py` script. The release info is downloaded in the `generate_state.py` script and used to update the state file. If the `build_info` changed the associated release should be deleted and re-created in `generate_releases`. If the release is deleted, empty the `release_info` in the state file. If the `asset_info` changed the release info should be updated in `generate_build_info.py`.
