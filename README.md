@@ -6,6 +6,15 @@ This repository builds and publishes Python packages as [Python executables (PEX
 
 The PEX files are published to the GitHub releases and pulled down using HTTP requests using Hermit. This makes it easy to manage multiple versions of the same tool and for different platforms as well. Currently macOS and Linux are supported.
 
+## Build Pipeline
+
+1. `generate_state.py`
+2. `generate_releases.py`
+3. `generate_requirements.py`
+4. `generate_pex.py`
+5. `generate_build_info.py`
+6. `generate_hermit.py`
+
 ## Implementation
 
 Each Python package has it's own directory in the `hermit-python-packages` repository. For example `python/aider-chat`. The directory contains a `config.yaml` file that defines the following configuration options:
