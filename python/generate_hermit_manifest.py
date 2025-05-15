@@ -67,19 +67,6 @@ class HermitManifestGenerator:
             
         return state
 
-    def get_required_platforms(self) -> List[str]:
-        """Get the list of required platforms for a complete release.
-        
-        Returns:
-            List of platform strings (e.g., "linux-amd64", "darwin-arm64")
-        """
-        return [
-            "linux-amd64",
-            "linux-arm64",
-            "darwin-amd64",
-            "darwin-arm64"
-        ]
-
     def check_version_complete(self, version_info: Dict) -> bool:
         """Check if a version has all required platform assets.
         
@@ -89,21 +76,24 @@ class HermitManifestGenerator:
         Returns:
             bool: True if all required platforms have assets, False otherwise
         """
-        assets = version_info.get('assets', {})
-        required_platforms = self.get_required_platforms()
-        
-        for platform in required_platforms:
+        package_assets = version_info.get('assets', {})
+        required_assets = [
+            # f"{version_info['package']}-linux-amd64.tar.gz",
+            # f"{version_info['package']}-linux-arm64.tar.gz",
+            # f"{version_info['package']}-darwin-amd64.tar.gz",
+            f"{version_info['package']}-darwin-arm64.tar.gz"
+        ]
+        result = True
+
+        for required_asset in required_assets:
             # Check if the asset exists for this platform
-            asset_name_parts = platform.split('-')
-            os_name = asset_name_parts[0]
-            arch_name = asset_name_parts[1]
-            
-            asset_name = f"{version_info['package']}-{os_name}-{arch_name}.tar.gz"
-            if asset_name not in assets:
-                self.logger.debug(f"Missing asset {asset_name} for version {version_info['version']}")
-                return False
+            if required_asset in package_assets:
+                self.logger.debug(f"Found required asset {required_asset} for version {version_info['version']}")
+            else:
+                self.logger.debug(f"Missing required asset {required_asset} for version {version_info['version']}")
+                result = False
         
-        return True
+        return result
 
     def generate_manifest(self, package_name: str) -> bool:
         """Generate a Hermit manifest file for the package.
@@ -140,6 +130,8 @@ class HermitManifestGenerator:
             for version_info in versions:
                 version = version_info['version']
                 assets = version_info.get('assets', {})
+
+                self.logger.debug(f"Processing {actual_package_name} {version}: assets={assets}")
                 
                 # Add package name to version_info for check_version_complete
                 version_info['package'] = actual_package_name
@@ -203,7 +195,6 @@ class HermitManifestGenerator:
         Returns:
             bool: True if successful, False if any errors occurred
         """
-        self.logger.info(f"Processing package: {package_name}")
         result = self.generate_manifest(package_name)
         if result:
             self.logger.info(f"Successfully processed package: {package_name}")

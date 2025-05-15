@@ -364,7 +364,7 @@ PEX_SCRIPT={binary} exec "$SCRIPT_DIR/{pex_path.name}" "$@"
                 has_release = version_info.get('release', False)
                 assets = version_info.get('assets', {})
                 
-                self.logger.debug(f"Processing {actual_package_name} {version}: requirements={has_requirements}, release={has_release}")
+                self.logger.debug(f"Processing {actual_package_name} {version}: requirements={has_requirements}, release={has_release}, assets={assets}")
                 
                 # Only process versions with requirements and releases
                 if has_requirements and has_release:
