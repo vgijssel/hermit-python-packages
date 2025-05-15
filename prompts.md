@@ -139,3 +139,7 @@ version: 0.83.1
 ```
 
 This build information is written to the GitHub release in the script `generate_build_info.py`. The `generate_pex.py` script will no longer upload the digest and will only update the state file with the sha256 digest of the tarball archive. 
+
+## Only update the build information if there is a change
+
+The `generate_build_info.py` script will only update the build information if there is a change. The build_info from the state file should be compared to the build_info that's generated. If both the dicts are the same the build information is not updated. The build information is only updated if there is a change.

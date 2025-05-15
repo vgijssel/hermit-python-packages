@@ -81,31 +81,6 @@ class BuildInfoGenerator:
             
         return state
 
-    def _extract_build_info_from_description(self, description: str) -> Optional[Dict]:
-        """Extract build information from a GitHub release description.
-        
-        Args:
-            description: GitHub release description
-            
-        Returns:
-            Dict containing build information or None if not found
-        """
-        if not description:
-            return None
-            
-        # Look for YAML block in the description
-        yaml_match = re.search(r'```yaml\n(.*?)```', description, re.DOTALL)
-        if not yaml_match:
-            return None
-            
-        yaml_content = yaml_match.group(1)
-        try:
-            build_info = yaml.safe_load(yaml_content)
-            return build_info
-        except Exception as e:
-            self.logger.error(f"Error parsing build info YAML: {e}")
-            return None
-
     def update_github_release_description(self, package_name: str, version: str, python_version: str, assets: Dict, state_build_info: Optional[Dict] = None) -> bool:
         """Update the GitHub release description with build information.
         
@@ -123,15 +98,6 @@ class BuildInfoGenerator:
             # Format the tag name
             tag_name = f"{package_name}-v{version}"
             
-            # Get the repository
-            repo = self.github.get_repo(self.github_repo)
-            
-            try:
-                release = repo.get_release(tag_name)
-            except GithubException:
-                self.logger.error(f"Release {tag_name} not found")
-                return False
-            
             # Create build information YAML
             build_info = {
                 "config_version": 1,
@@ -140,16 +106,18 @@ class BuildInfoGenerator:
                 "version": version
             }
             
-            # Check if the release already has the same build information
-            existing_build_info = self._extract_build_info_from_description(release.body)
-            
-            # Also check against state_build_info if provided
-            if state_build_info and state_build_info == build_info:
+            if state_build_info == build_info:
                 self.logger.info(f"Build information for {tag_name} in state file matches new build info, skipping update")
                 return True
-            elif existing_build_info and existing_build_info == build_info:
-                self.logger.info(f"Build information for {tag_name} in release description already matches new build info, skipping update")
-                return True
+
+            # Get the repository
+            repo = self.github.get_repo(self.github_repo)
+            
+            try:
+                release = repo.get_release(tag_name)
+            except GithubException:
+                self.logger.error(f"Release {tag_name} not found")
+                return False
             
             # Convert to YAML string
             build_info_yaml = yaml.dump(build_info, default_flow_style=False)
@@ -190,7 +158,6 @@ class BuildInfoGenerator:
                 self.logger.info(f"No versions found in state file for {package_name}")
                 return True
             
-            has_changes = False
             for version_info in versions:
                 version = version_info['version']
                 python_version = version_info['python']
@@ -211,9 +178,7 @@ class BuildInfoGenerator:
                         success = self.update_github_release_description(
                             actual_package_name, version, python_version, asset_hashes, build_info
                         )
-                        if success:
-                            has_changes = True
-                        else:
+                        if not success:
                             self.logger.error(f"Failed to update release description for {actual_package_name} {version}")
             
             self.logger.info(f"Successfully processed package: {package_name}")
