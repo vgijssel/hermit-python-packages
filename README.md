@@ -41,3 +41,4 @@ Once the PEX files and bash scripts are ready they are uploaded to GitHub releas
 - [ ] Ability to pass in list of config files to process. For example `python/aider-chat/config.yaml` and `python/ansible/config.yaml`. This will allow for multiple packages to be processed in one go.
 - [ ] Ability to overwrite / replace releases.
 - [ ] Do we care about the python version for creating requirement files?
+- [ ] Store requirements file path into the state file for generate_pex script
