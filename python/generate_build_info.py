@@ -81,7 +81,7 @@ class BuildInfoGenerator:
             
         return state
 
-    def update_github_release_description(self, package_name: str, version: str, python_version: str, assets: Dict, config_version: int, state_build_info: Optional[Dict] = None) -> bool:
+    def update_github_release_description(self, package_name: str, version: str, python_version: str, assets: Dict, config_version: int, binaries: List[str], state_build_info: Optional[Dict] = None) -> bool:
         """Update the GitHub release description with build information.
         
         Args:
@@ -89,6 +89,8 @@ class BuildInfoGenerator:
             version: Version of the package
             python_version: Python version used for the build
             assets: Dictionary of asset names and their SHA256 hashes
+            config_version: Configuration version
+            binaries: List of binary names
             state_build_info: Build information from state file, if available
             
         Returns:
@@ -101,15 +103,28 @@ class BuildInfoGenerator:
             # Create build information YAML
             build_info = {
                 "config_version": config_version,
-                "assets": assets,
                 "python": python_version,
-                "version": version
+                "version": version,
+                "binaries": binaries
             }
             
-            if state_build_info == build_info:
-                self.logger.info(f"Build information for {tag_name} in state file matches new build info, skipping update")
-                return True
-
+            asset_info = {}
+            for asset_name, asset_hash in assets.items():
+                asset_info[asset_name] = asset_hash
+            
+            release_info = {
+                "build_info": build_info,
+                "asset_info": asset_info
+            }
+            
+            if state_build_info and state_build_info.get("build_info") == build_info:
+                # Check if asset_info is the same
+                if state_build_info.get("asset_info") == asset_info:
+                    self.logger.info(f"Build information for {tag_name} in state file matches new build info, skipping update")
+                    return True
+                else:
+                    self.logger.info(f"Asset information for {tag_name} has changed, updating release description")
+            
             # Get the repository
             repo = self.github.get_repo(self.github_repo)
             
@@ -120,12 +135,12 @@ class BuildInfoGenerator:
                 return False
             
             # Convert to YAML string
-            build_info_yaml = yaml.dump(build_info, default_flow_style=False)
+            release_info_yaml = yaml.dump(release_info, default_flow_style=False)
             
             # Update release description
             release.update_release(
                 name=release.title,
-                message=f"```yaml\n{build_info_yaml}```",
+                message=f"```yaml\n{release_info_yaml}```",
                 draft=release.draft,
                 prerelease=release.prerelease
             )
@@ -151,6 +166,7 @@ class BuildInfoGenerator:
             config = self.load_config(package_name)
             actual_package_name = config['package']
             config_version = config.get('config_version', 1)
+            binaries = config.get('binaries', [])
             
             state = self.load_state(package_name)
             versions = state.get('versions', [])
@@ -164,7 +180,7 @@ class BuildInfoGenerator:
                 python_version = version_info['python']
                 has_release = version_info.get('release', False)
                 assets = version_info.get('assets', {})
-                build_info = version_info.get('build_info', {})
+                release_info = version_info.get('release_info', {})
                 
                 # Only process versions with releases and assets
                 if has_release and assets:
@@ -177,7 +193,8 @@ class BuildInfoGenerator:
                     if asset_hashes:
                         # Update GitHub release description
                         success = self.update_github_release_description(
-                            actual_package_name, version, python_version, asset_hashes, config_version, build_info
+                            actual_package_name, version, python_version, asset_hashes, 
+                            config_version, binaries, release_info
                         )
                         if not success:
                             self.logger.error(f"Failed to update release description for {actual_package_name} {version}")

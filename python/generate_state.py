@@ -130,19 +130,19 @@ class StateGenerator:
             
             for release in releases:
                 tag_name = release.tag_name
-                build_info = self._extract_build_info_from_description(release.body)
+                release_info = self._extract_build_info_from_description(release.body)
 
                 self.github_releases[tag_name] = {
                     "exists": True,
                     "is_prerelease": release.prerelease,
-                    "build_info": build_info,
+                    "release_info": release_info,
                 }
 
-                # Extract build information from release description
+                # Extract asset information from release description
                 assets = {}
                 
-                if build_info and "assets" in build_info:
-                    for asset_name, sha256 in build_info["assets"].items():
+                if release_info and "asset_info" in release_info:
+                    for asset_name, sha256 in release_info["asset_info"].items():
                         assets[asset_name] = sha256
                 
                 self.github_release_assets[tag_name] = assets
@@ -171,10 +171,10 @@ class StateGenerator:
             
         yaml_content = yaml_match.group(1)
         try:
-            build_info = yaml.safe_load(yaml_content)
-            return build_info
+            release_info = yaml.safe_load(yaml_content)
+            return release_info
         except Exception as e:
-            self.logger.error(f"Error parsing build info YAML: {e}")
+            self.logger.error(f"Error parsing release info YAML: {e}")
             return None
 
     def check_github_release(self, package_name: str, version: str) -> Dict:
@@ -195,7 +195,7 @@ class StateGenerator:
                 "exists": True,
                 "is_prerelease": self.github_releases[tag_name]["is_prerelease"],
                 "assets": self.github_release_assets.get(tag_name, {}),
-                "build_info": self.github_releases[tag_name]["build_info"],
+                "release_info": self.github_releases[tag_name]["release_info"],
             }
             self.logger.debug(f"Found release {tag_name} in cache")
         else:
@@ -203,7 +203,7 @@ class StateGenerator:
                 "exists": False,
                 "is_prerelease": False,
                 "assets": {},
-                "build_info": {},
+                "release_info": {},
             }
 
 
@@ -274,7 +274,7 @@ class StateGenerator:
                 "requirements": has_requirements,
                 "release": release_info["exists"],
                 "assets": release_info["assets"],
-                "build_info": release_info["build_info"],
+                "release_info": release_info["release_info"],
             })
         
         return state

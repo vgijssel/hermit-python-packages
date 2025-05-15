@@ -8,7 +8,7 @@ import os
 import sys
 import logging
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, List
 import yaml
 from github import Github, GithubException
 
@@ -93,6 +93,48 @@ class ReleaseGenerator:
         
         self.logger.info(f"State saved to {state_path}")
 
+    def delete_github_release(self, package_name: str, version: str) -> bool:
+        """Delete a GitHub release for the given package and version.
+        
+        Args:
+            package_name: Name of the package
+            version: Version of the package
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            # Format the tag name
+            tag_name = f"{package_name}-v{version}"
+            
+            # Get the repository
+            repo = self.github.get_repo(self.github_repo)
+            
+            try:
+                # Get the release
+                release = repo.get_release(tag_name)
+                
+                # Delete the release
+                release.delete_release()
+                self.logger.info(f"Successfully deleted release: {tag_name}")
+                
+                # Delete the tag
+                try:
+                    ref = repo.get_git_ref(f"tags/{tag_name}")
+                    ref.delete()
+                    self.logger.info(f"Successfully deleted tag: {tag_name}")
+                except GithubException as e:
+                    self.logger.warning(f"Could not delete tag {tag_name}: {e}")
+                
+                return True
+            except GithubException as e:
+                self.logger.warning(f"Release {tag_name} not found: {e}")
+                return True  # Consider it a success if the release doesn't exist
+                
+        except Exception as e:
+            self.logger.error(f"Error deleting GitHub release: {e}", exc_info=True)
+            return False
+
     def create_github_release(self, package_name: str, version: str) -> Tuple[bool, Optional[object]]:
         """Create a GitHub release for the given package and version.
         
@@ -142,6 +184,7 @@ class ReleaseGenerator:
             self.logger.info(f"Starting to process package: {package_name}")
             config = self.load_config(package_name)
             actual_package_name = config['package']
+            config_version = config.get('config_version', 1)
             
             state = self.load_state(package_name)
             versions = state.get('versions', [])
@@ -155,11 +198,35 @@ class ReleaseGenerator:
                 version = version_info['version']
                 has_requirements = version_info['requirements']
                 has_release = version_info['release']
+                release_info = version_info.get('release_info', {})
                 
                 self.logger.debug(f"Processing {actual_package_name} {version}: requirements={has_requirements}, release={has_release}")
                 
+                # Check if build_info in release_info matches config_version
+                if has_release and release_info and 'build_info' in release_info:
+                    release_config_version = release_info['build_info'].get('config_version')
+                    if release_config_version != config_version:
+                        self.logger.info(f"Config version changed from {release_config_version} to {config_version}, recreating release for {actual_package_name} {version}")
+                        
+                        # Delete existing release
+                        self.delete_github_release(actual_package_name, version)
+                        
+                        # Reset release state
+                        version_info['release'] = False
+                        version_info['assets'] = {}
+                        version_info['release_info'] = {}
+                        has_changes = True
+                        
+                        # Create new release
+                        success, _ = self.create_github_release(actual_package_name, version)
+                        if success:
+                            version_info['release'] = True
+                        else:
+                            self.logger.error(f"Failed to recreate release for {actual_package_name} {version}")
+                            return False
+                
                 # Only create releases for versions with requirements but no release
-                if has_requirements and not has_release:
+                elif has_requirements and not has_release:
                     self.logger.info(f"Creating release for {actual_package_name} {version}")
                     success, _ = self.create_github_release(actual_package_name, version)
                     if success:
