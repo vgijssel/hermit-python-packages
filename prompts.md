@@ -172,3 +172,7 @@ The CI implementation should be done using GitHub Actions. The CI should consist
 
 ## Merge platform-specific state files
 The `generate_pex.py` script will output a file called `asset-darwin-arm64.yaml` instead of `state.yaml`. The file be named platform specific. The `build` job in `build-pex.yml` will upload only the asset-*.yaml files to the artifact.  The `finalize` job will download all these asset-*.yaml files into the `python/` directory. The `generate_build_info.py` will merge all the asset-*.yaml files into a single state.yaml file. 
+
+## Commit changes to the repository
+
+In `task finalize` in Taskfile.yml another task will run after `hermit_manifest` which is called `commit`. This task will commit all the changes to the repository. The commit message should be `[skip ci] Updated Repository Files`.
