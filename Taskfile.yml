@@ -45,8 +45,8 @@ tasks:
     desc: Prepare the build
     cmds:
       - task: state
-      - task: releases
       - task: requirements
+      - task: releases
 
   commit:
     desc: Commit changes to the repository
