@@ -216,7 +216,7 @@ class BuildInfoGenerator:
                 prerelease=is_prerelease
             )
             
-            self.logger.info(f"Updated release description for {tag_name}")
+            self.logger.info(f"Updated release description for {tag_name} prerelease={is_prerelease}")
             return True
             
         except Exception as e:
