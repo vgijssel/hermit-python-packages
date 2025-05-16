@@ -48,11 +48,19 @@ tasks:
       - task: releases
       - task: requirements
 
+  commit:
+    desc: Commit changes to the repository
+    cmds:
+      - git add .
+      - git commit -m "[skip ci] Updated Repository Files"
+      - git push origin main
+
   finalize:
     desc: Finalize the build
     cmds:
       - task: build_info
       - task: hermit_manifest
+      - task: commit
 
   all:
     desc: Run all tasks
