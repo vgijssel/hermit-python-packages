@@ -8,6 +8,7 @@ import os
 import sys
 import logging
 import re
+import glob
 from pathlib import Path
 from typing import Dict, Optional, List
 import yaml
@@ -63,7 +64,7 @@ class BuildInfoGenerator:
         return config
 
     def load_state(self, package_name: str) -> Dict:
-        """Load the package state from state.yaml.
+        """Load the package state from state.yaml or merge platform-specific asset files.
         
         Args:
             package_name: Name of the package
@@ -72,6 +73,45 @@ class BuildInfoGenerator:
             Dict containing the package state
         """
         state_path = self.package_dir / package_name / "state.yaml"
+        
+        # Check for platform-specific asset files
+        asset_pattern = str(self.package_dir / package_name / "asset-*.yaml")
+        asset_files = glob.glob(asset_pattern)
+        
+        if asset_files:
+            self.logger.info(f"Found {len(asset_files)} platform-specific asset files for {package_name}")
+            
+            # Load and merge all asset files
+            merged_state = None
+            for asset_file in asset_files:
+                self.logger.debug(f"Loading asset file: {asset_file}")
+                with open(asset_file, "r") as f:
+                    asset_state = yaml.safe_load(f)
+                
+                if merged_state is None:
+                    merged_state = asset_state
+                else:
+                    # Merge versions and their assets
+                    asset_versions = {v['version']: v for v in asset_state.get('versions', [])}
+                    
+                    for i, version_info in enumerate(merged_state.get('versions', [])):
+                        version = version_info['version']
+                        if version in asset_versions:
+                            # Merge assets from this platform
+                            if 'assets' not in merged_state['versions'][i]:
+                                merged_state['versions'][i]['assets'] = {}
+                                
+                            if 'assets' in asset_versions[version]:
+                                merged_state['versions'][i]['assets'].update(asset_versions[version]['assets'])
+            
+            # Save the merged state to state.yaml
+            with open(state_path, "w") as f:
+                yaml.dump(merged_state, f, default_flow_style=False)
+            
+            self.logger.info(f"Merged platform-specific assets into {state_path}")
+            return merged_state
+        
+        # Fall back to state.yaml if no asset files found
         if not state_path.exists():
             self.logger.error(f"State file not found: {state_path}")
             sys.exit(1)

@@ -85,11 +85,11 @@ jobs:
         run: |
           task build
           
-      - name: Upload python directory
+      - name: Upload python directory with asset files
         uses: actions/upload-artifact@v4
         with:
           name: python-build-${{ matrix.os }}
-          path: python/
+          path: python/**/asset-*.yaml
           retention-days: 1
 
   finalize:
@@ -104,6 +104,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
+      - name: Download python directory from prepare job
+        uses: actions/download-artifact@v4
+        with:
+          name: python-prepare
+          path: python/
+          
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -111,12 +117,10 @@ jobs:
           path: artifacts/
           merge-multiple: false
           
-      - name: Merge build artifacts
+      - name: Copy asset files to python directory
         run: |
-          # Copy all build artifacts to the python directory
-          for dir in artifacts/python-build-*/; do
-            cp -r "$dir"* python/
-          done
+          # Copy all asset files to the python directory
+          find artifacts/ -name "asset-*.yaml" -exec cp {} python/ \;
           
       - name: Setup environment variables
         run: |

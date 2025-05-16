@@ -109,17 +109,20 @@ class PexGenerator:
         return state
 
     def save_state(self, package_name: str, state: Dict) -> None:
-        """Save state to a YAML file.
+        """Save state to a platform-specific asset YAML file.
         
         Args:
             package_name: Name of the package
             state: State to save
         """
-        state_path = self.package_dir / package_name / "state.yaml"
-        with open(state_path, "w") as f:
+        # Create platform-specific asset file name
+        asset_filename = f"asset-{self.os_name}-{self.arch_name}.yaml"
+        asset_path = self.package_dir / package_name / asset_filename
+        
+        with open(asset_path, "w") as f:
             yaml.dump(state, f, default_flow_style=False)
         
-        self.logger.info(f"State saved to {state_path}")
+        self.logger.info(f"Platform-specific asset state saved to {asset_path}")
 
     def build_pex(self, package_name: str, version: str, python_version: str) -> Path:
         """Build a PEX file for the specified package version.
