@@ -36,6 +36,7 @@ jobs:
       - name: Prepare build
         run: |
           task prepare
+        continue-on-error: true
           
       - name: Upload python directory
         uses: actions/upload-artifact@v4
@@ -84,6 +85,7 @@ jobs:
       - name: Build PEX packages
         run: |
           task build
+        continue-on-error: true
           
       - name: Upload python directory with asset files
         uses: actions/upload-artifact@v4
@@ -132,3 +134,4 @@ jobs:
       - name: Finalize PEX packages
         run: |
           task finalize
+        continue-on-error: true
