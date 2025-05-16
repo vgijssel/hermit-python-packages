@@ -201,6 +201,7 @@ class ReleaseGenerator:
                 release_info = version_info.get('release_info', {})
 
                 build_info = {
+                    "package": actual_package_name,
                     "config_version": config_version,
                     "python": version_info['python'],
                     "version": version,

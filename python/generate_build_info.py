@@ -121,6 +121,35 @@ class BuildInfoGenerator:
             
         return state
 
+    def check_version_complete(self, package_assets: Dict, package_name: str, version: str) -> bool:
+        """Check if a version has all required platform assets.
+        
+        Args:
+            package_assets: Package assets information
+            package_name: Name of the package
+            version: Version of the package
+
+        Returns:
+            bool: True if all required platforms have assets, False otherwise
+        """
+        required_assets = [
+            f"{package_name}-linux-amd64.tar.gz",
+            f"{package_name}-linux-arm64.tar.gz",
+            f"{package_name}-darwin-amd64.tar.gz",
+            f"{package_name}-darwin-arm64.tar.gz"
+        ]
+        result = True
+
+        for required_asset in required_assets:
+            # Check if the asset exists for this platform
+            if required_asset in package_assets:
+                self.logger.debug(f"Found required asset {required_asset} for version {version}")
+            else:
+                self.logger.debug(f"Missing required asset {required_asset} for version {version}")
+                result = False
+        
+        return result
+
     def update_github_release_description(self, package_name: str, version: str, python_version: str, assets: Dict, config_version: int, binaries: List[str], state_build_info: Optional[Dict] = None) -> bool:
         """Update the GitHub release description with build information.
         
@@ -142,6 +171,7 @@ class BuildInfoGenerator:
             
             # Create build information YAML
             build_info = {
+                "package": package_name,
                 "config_version": config_version,
                 "python": python_version,
                 "version": version,
@@ -176,13 +206,14 @@ class BuildInfoGenerator:
             
             # Convert to YAML string
             release_info_yaml = yaml.dump(release_info, default_flow_style=False)
-            
+
+            is_prerelease = not self.check_version_complete(asset_info, package_name, version)
+
             # Update release description
             release.update_release(
                 name=release.title,
                 message=f"```yaml\n{release_info_yaml}```",
-                draft=release.draft,
-                prerelease=release.prerelease
+                prerelease=is_prerelease
             )
             
             self.logger.info(f"Updated release description for {tag_name}")

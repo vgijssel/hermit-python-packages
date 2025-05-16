@@ -68,34 +68,6 @@ class HermitManifestGenerator:
             
         return state
 
-    def check_version_complete(self, version_info: Dict) -> bool:
-        """Check if a version has all required platform assets.
-        
-        Args:
-            version_info: Version information from state.yaml
-            
-        Returns:
-            bool: True if all required platforms have assets, False otherwise
-        """
-        package_assets = version_info.get('assets', {})
-        required_assets = [
-            # f"{version_info['package']}-linux-amd64.tar.gz",
-            # f"{version_info['package']}-linux-arm64.tar.gz",
-            # f"{version_info['package']}-darwin-amd64.tar.gz",
-            f"{version_info['package']}-darwin-arm64.tar.gz"
-        ]
-        result = True
-
-        for required_asset in required_assets:
-            # Check if the asset exists for this platform
-            if required_asset in package_assets:
-                self.logger.debug(f"Found required asset {required_asset} for version {version_info['version']}")
-            else:
-                self.logger.debug(f"Missing required asset {required_asset} for version {version_info['version']}")
-                result = False
-        
-        return result
-
     def _get_manifest_template(self) -> Template:
         """Get the Jinja2 template for the Hermit manifest."""
         template_str = """description = "{{ description }}"
@@ -113,6 +85,35 @@ sha256sums = {
 {% endfor %}}
 """
         return Template(template_str)
+
+    def check_version_complete(self, package_assets: Dict, package_name: str, version: str) -> bool:
+        """Check if a version has all required platform assets.
+        
+        Args:
+            package_assets: Package assets information
+            package_name: Name of the package
+            version: Version of the package
+
+        Returns:
+            bool: True if all required platforms have assets, False otherwise
+        """
+        required_assets = [
+            f"{package_name}-linux-amd64.tar.gz",
+            f"{package_name}-linux-arm64.tar.gz",
+            f"{package_name}-darwin-amd64.tar.gz",
+            f"{package_name}-darwin-arm64.tar.gz"
+        ]
+        result = True
+
+        for required_asset in required_assets:
+            # Check if the asset exists for this platform
+            if required_asset in package_assets:
+                self.logger.debug(f"Found required asset {required_asset} for version {version}")
+            else:
+                self.logger.debug(f"Missing required asset {required_asset} for version {version}")
+                result = False
+        
+        return result
 
     def generate_manifest(self, package_name: str) -> bool:
         """Generate a Hermit manifest file for the package.
@@ -150,14 +151,11 @@ sha256sums = {
                 version = version_info['version']
                 python_version = version_info['python']
                 assets = version_info.get('assets', {})
+                is_complete = self.check_version_complete(assets, package_name, version)
 
-                self.logger.debug(f"Processing {actual_package_name} {version}: assets={assets} python_version={python_version}")
+                self.logger.debug(f"Processing {actual_package_name} {version}: assets={assets} python_version={python_version} is_complete={is_complete}")
                 
-                # Add package name to version_info for check_version_complete
-                version_info['package'] = actual_package_name
-                
-                self.logger.debug(f"Checking completeness of version {version}")
-                if self.check_version_complete(version_info):
+                if is_complete:
                     self.logger.info(f"Version {version} is complete with all required assets")
                     complete_versions.append(version_info)
                     
@@ -199,22 +197,6 @@ sha256sums = {
             self.logger.error(f"Error generating manifest for {package_name}: {e}", exc_info=True)
             return False
 
-    def process_package(self, package_name: str) -> bool:
-        """Process a package: generate Hermit manifest.
-        
-        Args:
-            package_name: Name of the package
-            
-        Returns:
-            bool: True if successful, False if any errors occurred
-        """
-        result = self.generate_manifest(package_name)
-        if result:
-            self.logger.info(f"Successfully processed package: {package_name}")
-        else:
-            self.logger.error(f"Failed to process package: {package_name}")
-        return result
-
 
 def main():
     """Main entry point."""
@@ -245,7 +227,7 @@ def main():
         success = True
         for package in args.package:
             logger.info(f"Processing package: {package}")
-            if not generator.process_package(package):
+            if not generator.generate_manifest(package):
                 logger.error(f"Failed to process package {package}")
                 success = False
         

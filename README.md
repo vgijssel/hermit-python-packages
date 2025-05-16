@@ -47,9 +47,13 @@ Once the PEX files and bash scripts are ready they are uploaded to GitHub releas
 - [x] Query the releases API once and paginate over all the results. Cross reference versions from pypi and versions releases on GitHub. Include only versions for processing that don't have a release or those that have a draft/prerelease release.
 - [x] Ability to pass in list of config files to process. For example `python/aider-chat/config.yaml` and `python/ansible/config.yaml`. This will allow for multiple packages to be processed in one go.
 - [x] Ability to overwrite / replace releases.
+- [ ] Mark release as regular release after all assets have been uploaded.
+- [ ] Commit files into repository and push to main branch (self updating hermit manifest). Skip CI on this commit!
+- [ ] Scheduled workflow every hour to check for new versions
+- [ ] Allow jobs to fail, want to continue processing as much as possible.
 - [ ] Make requirement files part of build_info
+- [ ] Re-create requirements files when Python version changes
 - [ ] Test packages in Hermit manifest files before making pushing into the repository.
 - [ ] Ensure Python 3.10 inside the yaml config is not a number but a string
 - [ ] Ability to exclude certain packages which pex is complaining about?
 - [ ] Automatically install playwright (and other friends?) inside Aider-Chat.
-- [ ] Do we care about the python version for creating requirement files?

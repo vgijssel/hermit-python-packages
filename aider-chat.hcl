@@ -9,5 +9,5 @@ version "0.83.1" {
 }
 
 sha256sums = {
-  "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v0.83.1/aider-chat-darwin-arm64.tar.gz": "8911d5ec2f06a9de1b4c7d56d777effc47590596d747e914b98cd6c8623cc4c8",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v0.83.1/aider-chat-darwin-arm64.tar.gz": "27db70471333ad1fb6b8cc73326e0b5f01bff3eb95f1ad98e7963d223324321f",
 }

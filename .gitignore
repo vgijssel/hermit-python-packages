@@ -3,4 +3,4 @@
 .hermit
 .pants.d
 python/**/state.yaml
-python/**/asset-*-*.yaml
+python/**/asset-*.yaml
