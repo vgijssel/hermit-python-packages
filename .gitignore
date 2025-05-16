@@ -2,3 +2,4 @@
 .env
 .hermit
 .pants.d
+python/**/state.yaml
