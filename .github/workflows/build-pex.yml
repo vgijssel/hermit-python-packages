@@ -11,47 +11,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build PEX packages
-    runs-on: ${{ matrix.os }}
-
-    permissions:
-      contents: write  # Required for creating GitHub releases
-    # https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
-    strategy:
-      matrix:
-        os: 
-          - ubuntu-24.04 # amd64
-          - ubuntu-24.04-arm # arm64
-          - macos-13 # amd64
-          - macos-15 # arm64
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup environment variables
-        run: |
-          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .env
-          
-      - uses: HatsuneMiku3939/direnv-action@v1
-        with:
-          direnvVersion: 2.32.1
-          masks: GITHUB_TOKEN
-          
-      - uses: cashapp/activate-hermit@v1
-
-      - name: Build PEX packages
-        run: |
-          task pex:build
-
-  finalize:
-    name: Finalize PEX packages
-    needs: build
+  prepare:
+    name: Prepare Build
     runs-on: ubuntu-latest
     
     permissions:
-      contents: write  # Required for finalizing GitHub releases
+      contents: write  # Required for creating GitHub releases
       
     steps:
       - name: Checkout code
@@ -68,6 +33,102 @@ jobs:
           
       - uses: cashapp/activate-hermit@v1
 
+      - name: Prepare build
+        run: |
+          task prepare
+          
+      - name: Upload python directory
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-prepare
+          path: python/
+          retention-days: 1
+
+  build:
+    name: Build PEX packages
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+
+    permissions:
+      contents: write  # Required for creating GitHub releases
+      
+    strategy:
+      matrix:
+        os: 
+          - ubuntu-24.04 # amd64
+          - ubuntu-24.04-arm # arm64
+          - macos-13 # amd64
+          - macos-15 # arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download python directory
+        uses: actions/download-artifact@v4
+        with:
+          name: python-prepare
+          path: python/
+          
+      - name: Setup environment variables
+        run: |
+          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .env
+          
+      - uses: HatsuneMiku3939/direnv-action@v1
+        with:
+          direnvVersion: 2.32.1
+          masks: GITHUB_TOKEN
+          
+      - uses: cashapp/activate-hermit@v1
+
+      - name: Build PEX packages
+        run: |
+          task build
+          
+      - name: Upload python directory
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-build-${{ matrix.os }}
+          path: python/
+          retention-days: 1
+
+  finalize:
+    name: Finalize PEX packages
+    needs: build
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write  # Required for finalizing GitHub releases
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: python-build-*
+          path: artifacts/
+          merge-multiple: false
+          
+      - name: Merge build artifacts
+        run: |
+          # Copy all build artifacts to the python directory
+          for dir in artifacts/python-build-*/; do
+            cp -r "$dir"* python/
+          done
+          
+      - name: Setup environment variables
+        run: |
+          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .env
+          
+      - uses: HatsuneMiku3939/direnv-action@v1
+        with:
+          direnvVersion: 2.32.1
+          masks: GITHUB_TOKEN
+          
+      - uses: cashapp/activate-hermit@v1
+
       - name: Finalize PEX packages
         run: |
-          task pex:finalize
+          task finalize

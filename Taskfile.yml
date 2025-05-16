@@ -35,4 +35,15 @@ tasks:
       - task: prepare
       - task: build
       - task: finalize
+      
+  # Legacy tasks for GitHub Actions compatibility
+  pex:build:
+    desc: Legacy task for GitHub Actions compatibility
+    cmds:
+      - task: build
+      
+  pex:finalize:
+    desc: Legacy task for GitHub Actions compatibility
+    cmds:
+      - task: finalize
     
