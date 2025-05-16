@@ -182,6 +182,7 @@ class ReleaseGenerator:
         """
         try:
             self.logger.info(f"Starting to process package: {package_name}")
+            is_success = True
             config = self.load_config(package_name)
             actual_package_name = config['package']
             config_version = config.get('config_version', 1)
@@ -191,9 +192,8 @@ class ReleaseGenerator:
             
             if not versions:
                 self.logger.info(f"No versions found in state file for {package_name}")
-                return True
+                return is_success
             
-            has_changes = False
             for version_info in versions:
                 version = version_info['version']
                 has_requirements = version_info['requirements']
@@ -220,7 +220,6 @@ class ReleaseGenerator:
                     version_info['release'] = False
                     version_info['assets'] = {}
                     version_info['release_info'] = {}
-                    has_changes = True
                     
                     # Create new release
                     success, _ = self.create_github_release(actual_package_name, version)
@@ -228,7 +227,7 @@ class ReleaseGenerator:
                         version_info['release'] = True
                     else:
                         self.logger.error(f"Failed to recreate release for {actual_package_name} {version}")
-                        return False
+                        is_success = False
                 
                 # Check if build_info in release_info matches config_version
                 elif has_release and release_info and 'build_info' in release_info:
@@ -244,7 +243,6 @@ class ReleaseGenerator:
                         version_info['release'] = False
                         version_info['assets'] = {}
                         version_info['release_info'] = {}
-                        has_changes = True
                         
                         # Create new release
                         success, _ = self.create_github_release(actual_package_name, version)
@@ -252,7 +250,7 @@ class ReleaseGenerator:
                             version_info['release'] = True
                         else:
                             self.logger.error(f"Failed to recreate release for {actual_package_name} {version}")
-                            return False
+                            is_success = False
                 
                 # Only create releases for versions with requirements but no release
                 elif has_requirements and not has_release:
@@ -260,20 +258,19 @@ class ReleaseGenerator:
                     success, _ = self.create_github_release(actual_package_name, version)
                     if success:
                         version_info['release'] = True
-                        has_changes = True
                     else:
                         self.logger.error(f"Failed to create release for {actual_package_name} {version}")
-                        return False
+                        is_success = False
             
-            # Save state if there were changes
-            if has_changes:
-                self.save_state(package_name, state)
-                
+            self.save_state(package_name, state)
             self.logger.info(f"Successfully processed package: {package_name}")
-            return True
+
         except Exception as e:
             self.logger.error(f"Error processing package {package_name}: {e}", exc_info=True)
-            return False
+            is_success = False
+
+        return is_success
+        
 
 
 def main():
