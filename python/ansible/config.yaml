@@ -1,0 +1,24 @@
+package: ansible
+test: "ansible --help"
+description: Radically simple IT automation
+binaries:
+  - ansible
+  - ansible-config
+  - ansible-console
+  - ansible-doc
+  - ansible-galaxy
+  - ansible-inventory
+  - ansible-playbook
+  - ansible-pull
+  - ansible-vault
+  - ansible-test
+
+versions:
+  # - version: 9.0.1
+  #   python: "3.10"
+
+  # - version: 10.0.1
+  #   python: "3.10"
+
+  - version: 11.0.0
+    python: "3.11"

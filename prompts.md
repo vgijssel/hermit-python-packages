@@ -175,4 +175,4 @@ The `generate_pex.py` script will output a file called `asset-darwin-arm64.yaml`
 
 ## Commit changes to the repository
 
-In `task finalize` in Taskfile.yml another task will run after `hermit_manifest` which is called `commit`. This task will commit all the changes to the repository. The commit message should be `[skip ci] Updated Repository Files`.
+In `task finalize` in Taskfile.yml another task will run after `hermit_manifest` which is called `commit`. This task will commit all the changes to the repository. The commit message should be `[skip ci] Updated Repository Files`. The `.github/workflows/build-pex.yml` workflow needs to ensure the GitHub user is allowed to push to the repository. Also the workflow needs to be updated to skip execution when a commit starts with `[skip ci]`.

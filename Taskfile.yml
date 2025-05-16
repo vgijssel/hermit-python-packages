@@ -14,32 +14,32 @@ tasks:
   state:
     desc: Generate the state file
     cmds:
-      - pants run python/generate_state.py -- aider-chat
+      - pants run python/generate_state.py -- aider-chat ansible
 
   releases:
     desc: Generate the releases
     cmds:
-      - pants run python/generate_releases.py -- aider-chat
+      - pants run python/generate_releases.py -- aider-chat ansible
 
   requirements:
     desc: Generate the requirements
     cmds:
-      - pants run python/generate_requirements.py -- aider-chat
+      - pants run python/generate_requirements.py -- aider-chat ansible
 
   build:
     desc: Build the PEX
     cmds:
-      - pants run python/generate_pex.py -- aider-chat
+      - pants run python/generate_pex.py -- aider-chat ansible
       
   build_info:
     desc: Generate the build info
     cmds:
-      - pants run python/generate_build_info.py -- aider-chat
+      - pants run python/generate_build_info.py -- aider-chat ansible
 
   hermit_manifest:
     desc: Generate the hermit manifest
     cmds:
-      - pants run python/generate_hermit_manifest.py -- aider-chat
+      - pants run python/generate_hermit_manifest.py -- aider-chat ansible
 
   prepare:
     desc: Prepare the build
