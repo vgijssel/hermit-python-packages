@@ -11,23 +11,48 @@ tasks:
     cmds:
       - pants export
 
-  prepare:
-    desc: Prepare the build
+  state:
+    desc: Generate the state file
     cmds:
       - pants run python/generate_state.py -- aider-chat
+
+  releases:
+    desc: Generate the releases
+    cmds:
       - pants run python/generate_releases.py -- aider-chat
+
+  requirements:
+    desc: Generate the requirements
+    cmds:
       - pants run python/generate_requirements.py -- aider-chat
 
   build:
     desc: Build the PEX
     cmds:
       - pants run python/generate_pex.py -- aider-chat
+      
+  build_info:
+    desc: Generate the build info
+    cmds:
+      - pants run python/generate_build_info.py -- aider-chat
+
+  hermit_manifest:
+    desc: Generate the hermit manifest
+    cmds:
+      - pants run python/generate_hermit_manifest.py -- aider-chat
+
+  prepare:
+    desc: Prepare the build
+    cmds:
+      - task: state
+      - task: releases
+      - task: requirements
 
   finalize:
     desc: Finalize the build
     cmds:
-      - pants run python/generate_build_info.py -- aider-chat
-      - pants run python/generate_hermit_manifest.py -- aider-chat
+      - task: build_info
+      - task: hermit_manifest
 
   all:
     desc: Run all tasks

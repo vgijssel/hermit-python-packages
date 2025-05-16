@@ -162,7 +162,6 @@ asset_info:
 This release information is uploaded in the `generate_build_info.py` script. The release info is downloaded in the `generate_state.py` script and used to update the state file. If the `build_info` changed the associated release should be deleted and re-created in `generate_releases`. If the release is deleted, empty the `release_info` in the state file. If the `asset_info` changed the release info should be updated in `generate_build_info.py`.
 
 ## CI Implementation
-
 The CI implementation should be done using GitHub Actions. The CI should consists of 3 jobs:
 
 1. `task prepare` - This job will run `task prepare` which will generate state, generate releases and generate requirement files. The files that are changes within the `python` directory will be stored into an artifact and used by downstream jobs.
@@ -170,3 +169,6 @@ The CI implementation should be done using GitHub Actions. The CI should consist
 2. `task build` - This job will run `task build` which will generate the pex files and tarball archives. The job will be run on macOS arm64, macOS amd64, Linux arm64 and Linux amd64. The job will use the state files and requirement files from the previous `task prepare` job to determine which package versions need to be built for the current platform. The files within the `python` directory will be stored into an artifact and used by downstream jobs.
 
 3. `task finalize` - This job will run `task finalize` which update the build information based on the state files from the previous `task build` job. Also the Hermit manifest will be generated based on the state files from the previous `task build` job. 
+
+## Merge platform-specific state files
+The `generate_pex.py` script will output a file called `asset-darwin-arm64.yaml` instead of `state.yaml`. The file be named platform specific. The `build` job in `build-pex.yml` will upload only the asset-*.yaml files to the artifact.  The `finalize` job will download all these asset-*.yaml files into the `python/` directory. The `generate_build_info.py` will merge all the asset-*.yaml files into a single state.yaml file. 
