@@ -1,5 +1,9 @@
 version: '3'
 
+vars:
+  PACKAGES:
+    sh: find python -name "config.yaml" -exec bash -c 'basename $(dirname "{}")' \; | tr '\n' ' '
+
 tasks:
   3rdparty:python:update:
     desc: Update lockfile for third party Python dependencies
@@ -14,32 +18,44 @@ tasks:
   state:
     desc: Generate the state file
     cmds:
-      - pants run python/generate_state.py -- aider-chat ansible
+      - pants run python/generate_state.py -- {{.ARGS}}
+    vars:
+      ARGS: "{{default .PACKAGES .CLI_ARGS}}"
 
   releases:
     desc: Generate the releases
     cmds:
-      - pants run python/generate_releases.py -- aider-chat ansible
+      - pants run python/generate_releases.py -- {{.ARGS}}
+    vars:
+      ARGS: "{{default .PACKAGES .CLI_ARGS}}"
 
   requirements:
     desc: Generate the requirements
     cmds:
-      - pants run python/generate_requirements.py -- aider-chat ansible
+      - pants run python/generate_requirements.py -- {{.ARGS}}
+    vars:
+      ARGS: "{{default .PACKAGES .CLI_ARGS}}"
 
   build:
     desc: Build the PEX
     cmds:
-      - pants run python/generate_pex.py -- aider-chat ansible
+      - pants run python/generate_pex.py -- {{.ARGS}}
+    vars:
+      ARGS: "{{default .PACKAGES .CLI_ARGS}}"
       
   build_info:
     desc: Generate the build info
     cmds:
-      - pants run python/generate_build_info.py -- aider-chat ansible
+      - pants run python/generate_build_info.py -- {{.ARGS}}
+    vars:
+      ARGS: "{{default .PACKAGES .CLI_ARGS}}"
 
   hermit_manifest:
     desc: Generate the hermit manifest
     cmds:
-      - pants run python/generate_hermit_manifest.py -- aider-chat ansible
+      - pants run python/generate_hermit_manifest.py -- {{.ARGS}}
+    vars:
+      ARGS: "{{default .PACKAGES .CLI_ARGS}}"
 
   prepare:
     desc: Prepare the build
