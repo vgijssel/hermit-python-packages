@@ -4,6 +4,9 @@ test = "ansible --help"
 repository = "https://github.com/vgijssel/hermit-python-packages"
 source = "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v${version}/ansible-${os}-${arch}.tar.gz"
 
+version "11.6.0" {
+  runtime-dependencies = ["python3@3.11"]
+}
 version "11.5.0" {
   runtime-dependencies = ["python3@3.11"]
 }
@@ -48,4 +51,8 @@ sha256sums = {
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.5.0/ansible-darwin-arm64.tar.gz": "29ef400b1e1b7f6d924dff68b65e105682d104326949ea1e893ab8de08854b2d",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.5.0/ansible-linux-amd64.tar.gz": "e19ce71cfc1bae5141f16572bf62e983c14ac314fc311902c5694d2dbe2baf88",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.5.0/ansible-linux-arm64.tar.gz": "1388ba731a86cce337c85dfcc05195e8d375a395eae57d9454859b4ab3e46d81",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.6.0/ansible-darwin-amd64.tar.gz": "045b0a32ee90790a36675a0b3817cd722b81b697dfba4b682cbbdfb5495c21bb",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.6.0/ansible-darwin-arm64.tar.gz": "24b6f5378ef1464ffb29d4218cc6cdbeb64f6dba67a90143748b41f185090ce0",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.6.0/ansible-linux-amd64.tar.gz": "804b25e6f921b2c91bf4c8a3571d3fd9e017376f4c5bffec22be13a2200ee83b",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.6.0/ansible-linux-arm64.tar.gz": "c8007303c7e62c882ad270469bb1fd701448c1d2851c288395dc7dd0a05a01be",
 }
