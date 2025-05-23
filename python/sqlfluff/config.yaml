@@ -1,0 +1,9 @@
+package: sqlfluff
+test: "sqlfluff --help"
+description: "The SQL Linter for Humans"
+binaries:
+  - sqlfluff
+
+versions:
+  - version: 3.0.6
+    python: "3.11"

@@ -1,0 +1,9 @@
+package: datafold-sdk
+test: "datafold --help"
+description: "An SDK library for the datafold application."
+binaries:
+  - datafold
+
+versions:
+  - version: 0.0.27
+    python: "3.11"
