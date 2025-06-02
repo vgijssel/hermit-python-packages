@@ -50,12 +50,12 @@ Once the PEX files and bash scripts are ready they are uploaded to GitHub releas
 - [x] Mark release as regular release after all assets have been uploaded.
 - [x] Commit files into repository and push to main branch (self updating hermit manifest). Skip CI on this commit!
 - [x] Allow jobs to fail, want to continue processing as much as possible.
-- [ ] Add Ansible
+- [x] Add Ansible
+- [x] Ability to exclude certain packages which pex is complaining about?
 - [ ] Scheduled workflow every hour to check for new versions
 - [ ] Make requirement files part of build_info
 - [ ] Re-create requirements files when Python version changes
 - [ ] Test packages in Hermit manifest files before making pushing into the repository.
 - [ ] Ensure Python 3.10 inside the yaml config is not a number but a string
-- [ ] Ability to exclude certain packages which pex is complaining about?
 - [ ] Automatically install playwright (and other friends?) inside Aider-Chat.
 - [ ] Refactor Github workflow by consolidatiing steps in composite actions
