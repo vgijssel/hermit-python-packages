@@ -150,11 +150,12 @@ class BuildInfoGenerator:
         
         return result
 
-    def update_github_release_description(self, package_name: str, version: str, python_version: str, assets: Dict, config_version: int, binaries: List[str], state_build_info: Optional[Dict] = None) -> bool:
+    def update_github_release_description(self, package_name: str, extra_packages: List[str], version: str, python_version: str, assets: Dict, config_version: int, binaries: List[str], state_build_info: Optional[Dict] = None) -> bool:
         """Update the GitHub release description with build information.
         
         Args:
             package_name: Name of the package
+            extra_packages: List of extra packages to include
             version: Version of the package
             python_version: Python version used for the build
             assets: Dictionary of asset names and their SHA256 hashes
@@ -169,9 +170,10 @@ class BuildInfoGenerator:
             # Format the tag name
             tag_name = f"{package_name}-v{version}"
             
-            # Create build information YAML
+            # This also needs to be updated in python/generate_releases.py
             build_info = {
                 "package": package_name,
+                "extra_packages": extra_packages,
                 "config_version": config_version,
                 "python": python_version,
                 "version": version,
@@ -236,6 +238,7 @@ class BuildInfoGenerator:
             self.logger.info(f"Starting to process package: {package_name}")
             config = self.load_config(package_name)
             actual_package_name = config['package']
+            extra_packages = config.get('extra_packages', [])
             config_version = config.get('config_version', 1)
             binaries = config.get('binaries', [])
             
@@ -264,7 +267,7 @@ class BuildInfoGenerator:
                     if asset_hashes:
                         # Update GitHub release description
                         success = self.update_github_release_description(
-                            actual_package_name, version, python_version, asset_hashes, 
+                            actual_package_name, extra_packages, version, python_version, asset_hashes, 
                             config_version, binaries, release_info
                         )
                         if not success:

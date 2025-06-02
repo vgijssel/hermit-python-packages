@@ -185,6 +185,7 @@ class ReleaseGenerator:
             is_success = True
             config = self.load_config(package_name)
             actual_package_name = config['package']
+            extra_packages = config.get('extra_packages', [])
             config_version = config.get('config_version', 1)
 
             state = self.load_state(package_name)
@@ -200,8 +201,10 @@ class ReleaseGenerator:
                 has_release = version_info['release']
                 release_info = version_info.get('release_info', {})
 
+                # This also needs to be updated in python/generate_build_info.py
                 build_info = {
                     "package": actual_package_name,
+                    "extra_packages": extra_packages,
                     "config_version": config_version,
                     "python": version_info['python'],
                     "version": version,

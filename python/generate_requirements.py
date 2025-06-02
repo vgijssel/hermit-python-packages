@@ -80,11 +80,12 @@ class RequirementsGenerator:
         
         self.logger.info(f"State saved to {state_path}")
 
-    def create_dependency_files(self, package_name: str, version: str, python_version: str) -> bool:
+    def create_dependency_files(self, package_name: str, extra_packages: List[str], version: str, python_version: str) -> bool:
         """Create dependency files (requirements.in and requirements.txt) for the specified package version.
         
         Args:
             package_name: Name of the package
+            extra_packages: List of extra packages to include
             version: Version of the package
             python_version: Python version to use
             
@@ -99,6 +100,8 @@ class RequirementsGenerator:
         req_in_file = version_dir / "requirements.in"
         with open(req_in_file, "w") as f:
             f.write(f"{package_name}=={version}\n")
+            for extra in extra_packages:
+                f.write(f"{extra}\n")
         
         # Create requirements.txt (lock file)
         req_txt_file = version_dir / "requirements.txt"
@@ -144,6 +147,7 @@ class RequirementsGenerator:
             self.logger.info(f"Starting to process package: {package_name}")
             config = self.load_config(package_name)
             actual_package_name = config['package']
+            extra_packages = config.get('extra_packages', [])
             
             state = self.load_state(package_name)
             versions = state.get('versions', [])
@@ -162,7 +166,7 @@ class RequirementsGenerator:
                 
                 if not has_requirements:
                     self.logger.info(f"Generating requirements for {actual_package_name} {version}")
-                    success = self.create_dependency_files(package_name, version, python_version)
+                    success = self.create_dependency_files(package_name, extra_packages, version, python_version)
                     if success:
                         version_info['requirements'] = True
                         has_changes = True
