@@ -95,4 +95,9 @@ tasks:
     desc: Legacy task for GitHub Actions compatibility
     cmds:
       - task: finalize
+
+  devenv:apply:
+    desc: Apply the changes necessary for the development environment
+    cmds:
+      - op inject -i .env.tmpl -o .env
     
