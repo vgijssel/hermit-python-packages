@@ -157,6 +157,8 @@ class RequirementsGenerator:
                 return True
             
             has_changes = False
+            has_success = True
+
             for version_info in versions:
                 version = version_info['version']
                 python_version = version_info['python']
@@ -172,14 +174,14 @@ class RequirementsGenerator:
                         has_changes = True
                     else:
                         self.logger.error(f"Failed to generate requirements for {actual_package_name} {version}")
-                        return False
+                        has_success = False
             
             # Save state if there were changes
             if has_changes:
                 self.save_state(package_name, state)
                 
             self.logger.info(f"Successfully processed package: {package_name}")
-            return True
+            return has_success
         except Exception as e:
             self.logger.error(f"Error processing package {package_name}: {e}", exc_info=True)
             return False
