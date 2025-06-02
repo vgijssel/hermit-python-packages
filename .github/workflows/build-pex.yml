@@ -35,9 +35,13 @@ jobs:
           
       - uses: cashapp/activate-hermit@v1
 
-      - name: Prepare build
-        run: |
-          task prepare
+      - run: task state
+        continue-on-error: true
+
+      - run: task requirements
+        continue-on-error: true
+
+      - run: task releases
         continue-on-error: true
           
       - name: Upload python directory
@@ -85,8 +89,7 @@ jobs:
       - uses: cashapp/activate-hermit@v1
 
       - name: Build PEX packages
-        run: |
-          task build
+        run: task build
         continue-on-error: true
           
       - name: Upload python directory with asset files
@@ -140,7 +143,11 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           
-      - name: Finalize PEX packages
-        run: |
-          task finalize
+      - run: task build_info
+        continue-on-error: true
+
+      - run: task hermit_manifest
+        continue-on-error: true
+
+      - run: task commit
         continue-on-error: true
