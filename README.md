@@ -52,7 +52,7 @@ Once the PEX files and bash scripts are ready they are uploaded to GitHub releas
 - [x] Allow jobs to fail, want to continue processing as much as possible.
 - [x] Add Ansible
 - [x] Ability to exclude certain packages which pex is complaining about?
-- [ ] Scheduled workflow every hour to check for new versions
+- [x] Scheduled workflow every hour to check for new versions
 - [ ] Make requirement files part of build_info
 - [ ] Re-create requirements files when Python version changes
 - [ ] Test packages in Hermit manifest files before making pushing into the repository.
