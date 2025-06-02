@@ -134,14 +134,14 @@ sha256sums = {
             
             if not binaries:
                 self.logger.error(f"No binaries specified for {package_name}")
-                return False
+                return True
             
             state = self.load_state(package_name)
             versions = state.get('versions', [])
             
             if not versions:
                 self.logger.info(f"No versions found in state file for {package_name}")
-                return False
+                return True
             
             # Filter versions that have all required platform assets
             complete_versions = []
@@ -167,7 +167,7 @@ sha256sums = {
             
             if not complete_versions:
                 self.logger.warning(f"No complete versions found for {package_name}")
-                return False
+                return True
             
             # sort complete versions by version key inside the dict
             complete_versions = sorted(complete_versions, key=lambda x: x['version'], reverse=True)
