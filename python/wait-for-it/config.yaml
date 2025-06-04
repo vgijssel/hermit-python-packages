@@ -1,0 +1,9 @@
+package: wait-for-it
+test: "wait-for-it --help"
+description: "Wait for service(s) to be available before executing a command."
+binaries:
+  - wait-for-it
+
+versions:
+  - version: 1.0.0
+    python: "3.11"
