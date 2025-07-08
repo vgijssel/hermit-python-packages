@@ -57,6 +57,16 @@ tasks:
     vars:
       ARGS: "{{default .PACKAGES .CLI_ARGS}}"
 
+  hermit_index:
+    desc: Generate the hermit index
+    cmds:
+      - hermit search --json > index.json
+      - |
+        if gh release view index; then
+          gh release delete index --yes
+        fi
+      - gh release create index --title "Package index" --notes "The index reflecting the most recently merged changes to hermit-python-packages." ./index.json
+
   prepare:
     desc: Prepare the build
     cmds:
@@ -77,6 +87,7 @@ tasks:
       - task: build_info
       - task: hermit_manifest
       - task: commit
+      - task: hermit_index
 
   all:
     desc: Run all tasks
