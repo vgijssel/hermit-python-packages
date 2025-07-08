@@ -61,6 +61,10 @@ tasks:
     desc: Generate the hermit index
     cmds:
       - hermit search --json > index.json
+
+  hermit_index_release:
+    desc: Create or update release for the hermit index
+    cmds:
       - |
         if gh release view index; then
           gh release delete index --yes
@@ -86,8 +90,9 @@ tasks:
     cmds:
       - task: build_info
       - task: hermit_manifest
-      - task: commit
       - task: hermit_index
+      - task: commit
+      - task: hermit_index_release
 
   all:
     desc: Run all tasks

@@ -10,9 +10,5 @@ binaries:
 
 versions:
   # Using Python 3.11 for compatibility with all dependencies
-  - version: 0.82.0
+  - version: 0.83.2
     python: "3.11"
-
-  # # Only the latest version
-  # - version: 0.83.1
-  #   python: "3.11"
