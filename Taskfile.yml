@@ -67,7 +67,7 @@ tasks:
     cmds:
       - |
         if gh release view index; then
-          gh release delete index --yes
+          gh release delete index --yes --cleanup-tag
         fi
       - gh release create index --title "Package index" --notes "The index reflecting the most recently merged changes to hermit-python-packages." ./index.json
 
