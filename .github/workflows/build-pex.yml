@@ -149,5 +149,16 @@ jobs:
       - run: task hermit_manifest
         continue-on-error: true
 
-      - run: task commit
+      # This step should not fail
+      - run: task hermit_index
+
+      # This step can fail if there is nothing to commit
+      - name: Commit changes
+        id: commit
+        run: task commit
         continue-on-error: true
+
+      # Only run this when commit step was successful
+      - name: Release hermit index
+        if: steps.commit.outcome == 'success'
+        run: task hermit_index_release
