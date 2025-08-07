@@ -4,6 +4,9 @@ test = "aider --help"
 repository = "https://github.com/vgijssel/hermit-python-packages"
 source = "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v${version}/aider-chat-${os}-${arch}.tar.gz"
 
+version "0.85.3" {
+  runtime-dependencies = ["python3@3.11"]
+}
 version "0.85.2" {
   runtime-dependencies = ["python3@3.11"]
 }
@@ -41,4 +44,8 @@ sha256sums = {
   "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v0.85.2/aider-chat-darwin-arm64.tar.gz": "fa030c2b23ae66794f02a72b3fa42b5d732fc8a3e2d913afd2bdeb0184afceb3",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v0.85.2/aider-chat-linux-amd64.tar.gz": "a286f734479d5d6acbf4fb66094fec115776f0a2f7f5a5c6eda9b2d80e75ce3c",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v0.85.2/aider-chat-linux-arm64.tar.gz": "673f0a2be3598f304e986a0bdcad836c3342de97909bf62afdc40188ddcff6ba",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v0.85.3/aider-chat-darwin-amd64.tar.gz": "39bfc189e6234426115363f3e513e7a17da62eb499d0c1e2bb57796aab02e34e",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v0.85.3/aider-chat-darwin-arm64.tar.gz": "fe872ae84115f8722112114dd6e1f81a7ad5520be93937cf7c283a98aa9bc24f",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v0.85.3/aider-chat-linux-amd64.tar.gz": "766be72210b67e3fa451da7fedbd1f13c60d3d905b125b953c4433cdeaefd9a1",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/aider-chat-v0.85.3/aider-chat-linux-arm64.tar.gz": "49b97aefcee747ef35afc9430ea78adfdef069ed987d53f83b97934f0921c8f2",
 }
