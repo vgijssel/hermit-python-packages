@@ -58,8 +58,106 @@ version "2.3.6" {
 version "2.3.5" {
   runtime-dependencies = ["python3@3.11"]
 }
+version "2.3.4" {
+  runtime-dependencies = ["python3@3.11"]
+}
+version "2.3.3" {
+  runtime-dependencies = ["python3@3.11"]
+}
+version "2.3.2" {
+  runtime-dependencies = ["python3@3.11"]
+}
+version "2.3.18" {
+  runtime-dependencies = ["python3@3.11"]
+}
+version "2.3.17" {
+  runtime-dependencies = ["python3@3.11"]
+}
+version "2.3.16" {
+  runtime-dependencies = ["python3@3.11"]
+}
+version "2.3.15" {
+  runtime-dependencies = ["python3@3.11"]
+}
+version "2.3.14" {
+  runtime-dependencies = ["python3@3.11"]
+}
+version "2.3.13" {
+  runtime-dependencies = ["python3@3.11"]
+}
+version "2.3.12" {
+  runtime-dependencies = ["python3@3.11"]
+}
+version "2.3.11" {
+  runtime-dependencies = ["python3@3.11"]
+}
+version "2.3.10" {
+  runtime-dependencies = ["python3@3.11"]
+}
+version "2.3.1" {
+  runtime-dependencies = ["python3@3.11"]
+}
+version "2.3.0" {
+  runtime-dependencies = ["python3@3.11"]
+}
 
 sha256sums = {
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.0/spectacles-darwin-amd64.tar.gz": "3887b4dc7d7f02f8d54dcb2d53327fb779076c0288b3e36d78b0fcfd7e85fa21",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.0/spectacles-darwin-arm64.tar.gz": "c84c75593adb80446190538a2300b2a5642df7f350afe3deae89b2a7da0b962c",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.0/spectacles-linux-amd64.tar.gz": "f2f718315c5229453126b2c0030f8d94845833f7ce73c0ff86fadb5b14d2702d",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.0/spectacles-linux-arm64.tar.gz": "969375aa1e479e8be279e5999f8fae93ef96d6e8986a827c54269fab7db7c906",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.1/spectacles-darwin-amd64.tar.gz": "59dd56e47c9750a08e2a30da9513d332a36d2d84b0922e5f7eef0b3ad88ad4b7",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.1/spectacles-darwin-arm64.tar.gz": "177dac4e620004e788f234951bb9713189e6d1cc95a24e63dfaf86a7d9506a83",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.1/spectacles-linux-amd64.tar.gz": "5f7b44fb35d0d900908a496f2821d298a7d436ad6257278cfdf7288acab3a4b8",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.1/spectacles-linux-arm64.tar.gz": "0f87a7af25655cf066302ffa2848c2534f94b6cb7856448743bf8990f0f796ab",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.10/spectacles-darwin-amd64.tar.gz": "0c5d4b4e3a1f6fea8341cfde02a7f9db7176e9ea7df3b7afc5e2b4811effd248",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.10/spectacles-darwin-arm64.tar.gz": "9e4a232490afdae72cc2153120fb4be2b9ed1f492c5f8a84dee1c55554db0d4f",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.10/spectacles-linux-amd64.tar.gz": "78b18cd60eb39f8230b8e4728a6a8ad9bf33f1fc367f9832cc803e9243b10850",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.10/spectacles-linux-arm64.tar.gz": "2d3a9ef2e3a27de8b1206aed0483f3746f87616ffffaf02b9bb50c15bf817a2d",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.11/spectacles-darwin-amd64.tar.gz": "9a74c07895403e7980aa1cf81694b06273813004a5d2f0aedb90a75d5e644b95",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.11/spectacles-darwin-arm64.tar.gz": "6c49417929b7100fd327153da83bee3d4e79b8c455bbd0cdb0a8496bc7e94432",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.11/spectacles-linux-amd64.tar.gz": "9e6f12d56afbd1213eb827daa0fa617de9d0c9f37bbcd54607493219592667ee",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.11/spectacles-linux-arm64.tar.gz": "e8d0456d9a75c12973f3d00af0656f5c4be08cd1a01b39fa895351a8fc23f5fa",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.12/spectacles-darwin-amd64.tar.gz": "90787314b65fe6f37e9e233afef47bfd6f02cb726c412f62c230c65a41581269",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.12/spectacles-darwin-arm64.tar.gz": "3f91af421b41f178a455d9a44d475da57d766d8c34afbcb8896c93b7cfdcc29b",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.12/spectacles-linux-amd64.tar.gz": "e416944a71ed7373926cb7ddba3683947d1bddf3ff1a0466d9be652c9f62327f",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.12/spectacles-linux-arm64.tar.gz": "14214620f2e641b16b6d7d1dad1d09f2aa8fc6c09ade699c372a73f720266464",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.13/spectacles-darwin-amd64.tar.gz": "44ff799e68852855c0108157c1b45e7ded91b8271da297ab5e450743a06edc81",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.13/spectacles-darwin-arm64.tar.gz": "555fa2b67864a0752c721f769ab636b694989ebc0d0bd0e853fb173ab27b035d",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.13/spectacles-linux-amd64.tar.gz": "978c36c6fa1c1b21fdb4f962f96498248cabf8be2e2b08d57d86b85e8b7abbef",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.13/spectacles-linux-arm64.tar.gz": "55e86ddb910c161f757e9a92814508d991f9619ad2943eabad141406b96714c0",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.14/spectacles-darwin-amd64.tar.gz": "2d86c12890fe5b5e89261060f33a0e8129b0d94e82861b34ca9aadaa278ee72f",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.14/spectacles-darwin-arm64.tar.gz": "bb8270cc5ff8d0b28c067a76dad726f3ccbb0b7267554e57955add43f53c1240",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.14/spectacles-linux-amd64.tar.gz": "5660226b326da6b1c8cd83a6c08a6a6ae755ecd86c3a855bea158ac483f546c1",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.14/spectacles-linux-arm64.tar.gz": "cd0b4d573e9e609253afaf04bc437b42e4fb827eac152ba91641e6b3fbfff135",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.15/spectacles-darwin-amd64.tar.gz": "0b9b3045dc44447cd5d497c7f5b2bad3308db336b7c380150d9cc5ed95682def",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.15/spectacles-darwin-arm64.tar.gz": "0ad63b5c48a3c08e841329082c4ea5261e604d63d95b6c35ab91cbf774636329",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.15/spectacles-linux-amd64.tar.gz": "46d204415dd4a7017cc7d63c336b1a3e3f4320c6705b605f9dbd139d053b0604",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.15/spectacles-linux-arm64.tar.gz": "9d4cb47a8532f45973979e18623875a8398d59e4d038a5e8e2965521687ba74c",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.16/spectacles-darwin-amd64.tar.gz": "9ba3150634615db8546be322a765076dc34f6dc83c186b477899806209b1f57c",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.16/spectacles-darwin-arm64.tar.gz": "4f1156ab0e8e91913093d74ad6a0111502370829cdb564c2370be4d0d45ceafc",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.16/spectacles-linux-amd64.tar.gz": "8f8db8c100cd2d625df26d27284cefeac10448035eab946d1fdba81ca7ae699d",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.16/spectacles-linux-arm64.tar.gz": "970f9aafd7fe8f9180cc780ebf3fbdc15e55deb811ec007e889534133e54de37",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.17/spectacles-darwin-amd64.tar.gz": "976f8a10123eb4712e1ba6a60bca9b1452a8cb4723aa7ceabe34dfc4848b6035",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.17/spectacles-darwin-arm64.tar.gz": "793a859a8ceac19b89ea8aa3b007447be90c72680848c72e21bfda84eccceffc",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.17/spectacles-linux-amd64.tar.gz": "8da4c7bc8c1433ad59edefa2547b8c1086d051e25cef77bb98b96e73524d7464",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.17/spectacles-linux-arm64.tar.gz": "3a924016defc64a869b5119ca06e5481eda9472efb7eb0449adc1ca8c92b59cf",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.18/spectacles-darwin-amd64.tar.gz": "83e4fc0563a43ac167c73407b434ff597ecbeea9539d69a61ae5cf55ba7d6003",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.18/spectacles-darwin-arm64.tar.gz": "eb96f61a3d907378be0acf2abd09ee12dd491ba491e00a873908aa6eeab80506",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.18/spectacles-linux-amd64.tar.gz": "b86fbacc12ca3b1e7f44da44fe87d021f961ce220adfbe7ccf96fb490e852d63",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.18/spectacles-linux-arm64.tar.gz": "110f16a4c1fc03cd59cbdedb267f4ce6251d8d956f956fd7732e334027465138",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.2/spectacles-darwin-amd64.tar.gz": "b835ffd7f310a10c8911bf11e9d38723eb45845ee0c4ade088a8a194eacc3fb1",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.2/spectacles-darwin-arm64.tar.gz": "ed937bbea1c69ae7d36ca4089721cf92d6e9717ffa3c12155fc52f703c8cf81a",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.2/spectacles-linux-amd64.tar.gz": "668471f8adc91d18a2d4abeb3d4efc160be3b2458632a9fc8ff009ae504af036",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.2/spectacles-linux-arm64.tar.gz": "37a7396e3e38af243f7c59a8339d61770ed68a1d84d2f1ecec65f22ab155c4f7",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.3/spectacles-darwin-amd64.tar.gz": "b3919df5eaa2587246ef6e0f0bde211ecfa9778b8893aa92f2392b6aab680e65",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.3/spectacles-darwin-arm64.tar.gz": "caf3338be8e27f665ef7055580553ac5d10065c6f21bfafbad672cceb7dbcc7e",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.3/spectacles-linux-amd64.tar.gz": "d7b9d44599802e170ed539da38b2c01c6692cad3cf2c88814f1cf6eb09434563",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.3/spectacles-linux-arm64.tar.gz": "5f0a73a46022e8fa6f59659fd8f613ab013f12930aa883fe580cf55ddc58b115",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.4/spectacles-darwin-amd64.tar.gz": "b73ab317e981b2403fee5a973d88b0daa45de06cb126daa054341ff81d5e849e",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.4/spectacles-darwin-arm64.tar.gz": "b2e6c6e68ff571f10746f306d3b809941c62e80fd825d205274d38c1f00137ef",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.4/spectacles-linux-amd64.tar.gz": "c97ca636321f05bd0a00dc5404df80be88b58631a8f48a353b7e4e6bc9848c9a",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.4/spectacles-linux-arm64.tar.gz": "d7f283500df0ad9517f55927d2b2e93b94aedce94a35822116a70e6e73a12aef",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.5/spectacles-darwin-amd64.tar.gz": "9b9e650cd53ef9106388a57e4314746b6e4e132148aaab990e41fd13d46a6c92",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.5/spectacles-darwin-arm64.tar.gz": "3ff382073f8f1668a5d42d080731fd19c54da354cf9957575b974c0a8817c528",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.3.5/spectacles-linux-amd64.tar.gz": "19d62737d47dfb2a2286ae1c89145e0c3e75628cc270886da46d430f413b2a2e",
