@@ -31,6 +31,9 @@ version "11.3.0" {
 version "11.2.0" {
   runtime-dependencies = ["python3@3.11"]
 }
+version "11.10.0" {
+  runtime-dependencies = ["python3@3.11"]
+}
 version "11.1.0" {
   runtime-dependencies = ["python3@3.11"]
 }
@@ -47,6 +50,10 @@ sha256sums = {
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.1.0/ansible-darwin-arm64.tar.gz": "af0ff9be6784a1c4c85011e785022a29eb1b09752d99ca5d25efe481a9b007b4",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.1.0/ansible-linux-amd64.tar.gz": "319fbec2c8316fbd983c8e1253265b793548e4a2a66e06c77bac135397bd8681",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.1.0/ansible-linux-arm64.tar.gz": "c7b36a131aab3e34d390dd6bc27ab5c72ef9ec9da534bb875ddc7d53f17022b2",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.10.0/ansible-darwin-amd64.tar.gz": "6a908a454946a4ff4d06a9b53f417c5f80e4f5b2cd453127daf97ebe078df2b6",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.10.0/ansible-darwin-arm64.tar.gz": "195186132c543edada20467025d9f2a650ccca4afe7edd893613f8e59338ac79",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.10.0/ansible-linux-amd64.tar.gz": "357f7ffd64d1e3597bed57d586d2b16b4b1296f2f50a4ffbb73ddd38007db86b",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.10.0/ansible-linux-arm64.tar.gz": "211683c0fd4f6ecc9cc11f52eaf2cd47d399364ad06ee0ac9e417f31e8c1f02e",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.2.0/ansible-darwin-amd64.tar.gz": "adcd36f21575c3dc0f07800e9ff4fd614b72e471104e9b72eff349c2c13b90ad",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.2.0/ansible-darwin-arm64.tar.gz": "9877e4b1b5478ede4e296d75b020f4285e8aca884fc600f26e6e18eafd8dd731",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.2.0/ansible-linux-amd64.tar.gz": "8c3af5730a6c212d29e2e29715c10d53c012fe4a1a2d93f6952074a2fe800968",
