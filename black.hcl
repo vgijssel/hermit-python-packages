@@ -4,6 +4,9 @@ test = "black --help"
 repository = "https://github.com/vgijssel/hermit-python-packages"
 source = "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v${version}/black-${os}-${arch}.tar.gz"
 
+version "25.9.0" {
+  runtime-dependencies = ["python3@3.11"]
+}
 version "25.1.0" {
   runtime-dependencies = ["python3@3.11"]
 }
@@ -153,4 +156,8 @@ sha256sums = {
   "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.1.0/black-darwin-arm64.tar.gz": "d03562f6137532e2cafd24af091e124b2b2947d787c6e686c5bf4486af0ad0bd",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.1.0/black-linux-amd64.tar.gz": "443727303f76e04460fa548cbcd990d66abe7aada443f37e5342fc6ad6a5dcc5",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.1.0/black-linux-arm64.tar.gz": "c1f15d9fe07193cddd7183daabbea808b932fbe51bb7d96804a3fcd8c19b7927",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.9.0/black-darwin-amd64.tar.gz": "3b1502c4d8688e2af2da9f43bbcec69cd7005f529790839dcfe8a2d30ec02863",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.9.0/black-darwin-arm64.tar.gz": "f628c7b4af7088514b3af93a3774410ea27e138f482f0a39724154244bb0ece3",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.9.0/black-linux-amd64.tar.gz": "2d9116de45d45efdfefbbf2e48fc0eacf150221050efd8311826606cbed33a48",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.9.0/black-linux-arm64.tar.gz": "4e3315ef2b5c396e15c8aa78a9e4c4a4925a0ab7dbc868e15b2d19b6630782ee",
 }
