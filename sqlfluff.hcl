@@ -4,6 +4,9 @@ test = "sqlfluff --help"
 repository = "https://github.com/vgijssel/hermit-python-packages"
 source = "https://github.com/vgijssel/hermit-python-packages/releases/download/sqlfluff-v${version}/sqlfluff-${os}-${arch}.tar.gz"
 
+version "3.5.0" {
+  runtime-dependencies = ["python3@3.11"]
+}
 version "3.4.2" {
   runtime-dependencies = ["python3@3.11"]
 }
@@ -111,4 +114,8 @@ sha256sums = {
   "https://github.com/vgijssel/hermit-python-packages/releases/download/sqlfluff-v3.4.2/sqlfluff-darwin-arm64.tar.gz": "3dcff5a0f3b67b02b1cd021240afabcd847368b3833a2326282ba92d9c00855b",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/sqlfluff-v3.4.2/sqlfluff-linux-amd64.tar.gz": "20a0c9ce629f70e3edc8760ca9667ad1de4340442181139c08d4e1315c1e8c39",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/sqlfluff-v3.4.2/sqlfluff-linux-arm64.tar.gz": "b36344087741fbabd3ec9d224473af7339d996f8c82734f928098f48607603f2",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/sqlfluff-v3.5.0/sqlfluff-darwin-amd64.tar.gz": "7cb1dc154cd9eb42cb217581e2682b078a6ec1d24179d34ad5b3919b878b6183",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/sqlfluff-v3.5.0/sqlfluff-darwin-arm64.tar.gz": "4d7a14907fb16728b09e065daa329bb8e1dcf37be15fb6502bd69afd675b87cf",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/sqlfluff-v3.5.0/sqlfluff-linux-amd64.tar.gz": "c9b4cf26b84b66e641ff2cf1991bea65560f83e90510456418f08dd4345301b5",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/sqlfluff-v3.5.0/sqlfluff-linux-arm64.tar.gz": "85afa66b634a7bd4cca9b52e68b8dd4f68de044b45da630a7650c9e6f0707cba",
 }
