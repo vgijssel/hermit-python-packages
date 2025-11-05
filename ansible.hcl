@@ -37,6 +37,9 @@ version "11.3.0" {
 version "11.2.0" {
   runtime-dependencies = ["python3@3.11"]
 }
+version "11.12.0" {
+  runtime-dependencies = ["python3@3.11"]
+}
 version "11.11.0" {
   runtime-dependencies = ["python3@3.11"]
 }
@@ -67,6 +70,10 @@ sha256sums = {
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.11.0/ansible-darwin-arm64.tar.gz": "3647f7a8f432dbb1a6a8a4db9ee3502d86ddf373c53523844998b3ea5ba8f96c",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.11.0/ansible-linux-amd64.tar.gz": "2854e92d66cb78d3540d67e9aadcefae481031a6502e47d1ade543c4aff00791",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.11.0/ansible-linux-arm64.tar.gz": "8692089f7855b6258cf7627f46b769ef002b2994d1617b55799f69f9c3b0a83a",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.12.0/ansible-darwin-amd64.tar.gz": "c10e572b88bea79f9e2e79054bab16e32a44afabdd4af11e03f3e55bac781fc6",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.12.0/ansible-darwin-arm64.tar.gz": "848a7a61b62203ee36faa000442bbc8fa4d9a13f996115a2defa9c591bb49860",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.12.0/ansible-linux-amd64.tar.gz": "8ad8287b6d489e6ecc834e0d6de1585e78e6cd1dbaa50923fe8051a63fea401b",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.12.0/ansible-linux-arm64.tar.gz": "f60c041acb07275eac6fecf335694f2d3aff7d7da8fcb0782bcbcb57192f8857",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.2.0/ansible-darwin-amd64.tar.gz": "adcd36f21575c3dc0f07800e9ff4fd614b72e471104e9b72eff349c2c13b90ad",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.2.0/ansible-darwin-arm64.tar.gz": "9877e4b1b5478ede4e296d75b020f4285e8aca884fc600f26e6e18eafd8dd731",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/ansible-v11.2.0/ansible-linux-amd64.tar.gz": "8c3af5730a6c212d29e2e29715c10d53c012fe4a1a2d93f6952074a2fe800968",
