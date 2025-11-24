@@ -28,6 +28,9 @@ version "2.4.3" {
 version "2.4.2" {
   runtime-dependencies = ["python3@3.11"]
 }
+version "2.4.18" {
+  runtime-dependencies = ["python3@3.11"]
+}
 version "2.4.17" {
   runtime-dependencies = ["python3@3.11"]
 }
@@ -233,6 +236,10 @@ sha256sums = {
   "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.4.17/spectacles-darwin-arm64.tar.gz": "795808b7068eb94a54c59775ca6e19089c1b7211070c89d2dc54465f39ea8d30",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.4.17/spectacles-linux-amd64.tar.gz": "563ab6cb1fc00e92e570e698522904979dfb0bf28a96791f393af9c78e9c065c",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.4.17/spectacles-linux-arm64.tar.gz": "9aa877a5779f5457354755024d7704bcea6a2a7c14cd39864278d84bbaa6cb2d",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.4.18/spectacles-darwin-amd64.tar.gz": "c45ee34a08d9cd87feaebb4c1e4ef2708f38a0364eefee2cc80dc44a24bdaafe",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.4.18/spectacles-darwin-arm64.tar.gz": "086aa7e7f62ff958a74f8c5d66a6adfe0924f7e48fdc296bac64413bb4f288ec",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.4.18/spectacles-linux-amd64.tar.gz": "7a0185164c46059385492aaf3d9b3aa1161a9604dd4807431b2d9458cc78fada",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.4.18/spectacles-linux-arm64.tar.gz": "5a20a26144c1f234966b12fa7d2dc3303e7aa01ca280c9896b1c8167ce606f2b",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.4.2/spectacles-darwin-amd64.tar.gz": "cd35cb216d493439541c7e4263aabc169901367fac4362a18118cc182df5a084",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.4.2/spectacles-darwin-arm64.tar.gz": "78e6c6e7d0e037ab118fc70d7379490156f7b9192ac7a290aafd83a11b154644",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/spectacles-v2.4.2/spectacles-linux-amd64.tar.gz": "a3a556df8d5535058fabeb14a05263b629b4bea933f876d3d90306d4d0deb03a",
