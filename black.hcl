@@ -7,6 +7,9 @@ source = "https://github.com/vgijssel/hermit-python-packages/releases/download/b
 version "25.9.0" {
   runtime-dependencies = ["python3@3.11"]
 }
+version "25.12.0" {
+  runtime-dependencies = ["python3@3.11"]
+}
 version "25.11.0" {
   runtime-dependencies = ["python3@3.11"]
 }
@@ -163,6 +166,10 @@ sha256sums = {
   "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.11.0/black-darwin-arm64.tar.gz": "0d8531cffd8b16f5e9858638bd216d8a65b6a9f3ed2b1995accc51682eefc8cf",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.11.0/black-linux-amd64.tar.gz": "0f7101d010d4629f5192c0a0aa3f29d2c04885cf203f977a2a9377f257709761",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.11.0/black-linux-arm64.tar.gz": "c0067f3da608fcd1c1cece3f62fa657f028731e24fc8b8165e035e182d744c41",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.12.0/black-darwin-amd64.tar.gz": "0350418ba59dd7d5be9fb46d9da55528ae7f80ba8c4782221c689365b3476877",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.12.0/black-darwin-arm64.tar.gz": "1d17a6f1a76d4584931cbdd14bcb364ce64288619a5c2ea977e23c65770385dc",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.12.0/black-linux-amd64.tar.gz": "f2b5f3d3694651b7c280ee4c44d417963cca9b7ebef161032611b13ee639d4fe",
+  "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.12.0/black-linux-arm64.tar.gz": "77527c0eec83f19a1f563ce51679e32f6978d8b732d01d6861d3658068b518e3",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.9.0/black-darwin-amd64.tar.gz": "3b1502c4d8688e2af2da9f43bbcec69cd7005f529790839dcfe8a2d30ec02863",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.9.0/black-darwin-arm64.tar.gz": "f628c7b4af7088514b3af93a3774410ea27e138f482f0a39724154244bb0ece3",
   "https://github.com/vgijssel/hermit-python-packages/releases/download/black-v25.9.0/black-linux-amd64.tar.gz": "2d9116de45d45efdfefbbf2e48fc0eacf150221050efd8311826606cbed33a48",
